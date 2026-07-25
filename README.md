@@ -5,15 +5,15 @@ By [or1k.net](https://or1k.net)
 A single Rust + [ratatui](https://ratatui.rs) TUI binary that bundles seven
 sysadmin tools:
 
-| Module | What it does | Was previously |
-|---|---|---|
-| **SSH Server Manager** | Browse/add/edit/delete hosts straight from `~/.ssh/config` (comments and untouched blocks preserved byte-for-byte), tag servers and browse them by tag like folders, connect with one keypress, pin favorites, ping, copy the resolved `ssh` command, background port forwarding | new |
-| **SSH User Manager** | Create/remove Linux users + `authorized_keys` on remote hosts, manage reusable SSH key "profiles" | `linux-user-ssh-manager` (already Rust/TUI) |
-| **GoDaddy DNS Manager** | Manage DNS records across multiple GoDaddy API accounts | `domain_api_app` (Electron + React) |
-| **MySQL User Manager** | Create/list/delete MySQL/MariaDB users, rotate passwords, grant privileges — direct or via an SSH jump host | new |
-| **PostgreSQL User Manager** | Create/list/delete PostgreSQL roles, rotate passwords, grant database privileges — direct or via an SSH jump host | new |
-| **ClickHouse User Manager** | Create/list/edit/delete ClickHouse users (password, profile, allowed IPs) — direct SQL over HTTP (optionally via an SSH tunnel) or the legacy SSH + `users.d/*.xml` route | `clickhouse-user-manager` (Go + tview) |
-| **Logs & Journals Reader** | SSH in and read the systemd journal (`journalctl`) or a plain file under `/var/log` (browsable), with severity filtering (warning/error/crit/...), text search, and optional auto-refresh | new |
+| Module | What it does |
+|---|---|
+| **SSH Server Manager** | Browse/add/edit/delete hosts straight from `~/.ssh/config` (comments and untouched blocks preserved byte-for-byte), tag servers and browse them by tag like folders, connect with one keypress, pin favorites, ping, copy the resolved `ssh` command, background port forwarding |
+| **SSH User Manager** | Create/remove Linux users + `authorized_keys` on remote hosts, manage reusable SSH key "profiles" |
+| **GoDaddy DNS Manager** | Manage DNS records across multiple GoDaddy API accounts |
+| **MySQL User Manager** | Create/list/delete MySQL/MariaDB users, rotate passwords, grant privileges — direct or via an SSH jump host |
+| **PostgreSQL User Manager** | Create/list/delete PostgreSQL roles, rotate passwords, grant database privileges — direct or via an SSH jump host |
+| **ClickHouse User Manager** | Create/list/edit/delete ClickHouse users (password, profile, allowed IPs) — direct SQL over HTTP (optionally via an SSH tunnel) or the legacy SSH + `users.d/*.xml` route |
+| **Logs & Journals Reader** | SSH in and read the systemd journal (`journalctl`) or a plain file under `/var/log` (browsable), with severity filtering (warning/error/crit/...), text search, and optional auto-refresh |
 
 The MySQL, PostgreSQL and ClickHouse managers all save reusable **connection
 profiles** (label, host, port, DB user, encrypted password, optional SSH
@@ -66,13 +66,12 @@ Files are created automatically on first use. `.godaddy.key` is written with
 
 ### About secret storage
 
-The original GoDaddy Electron app used Electron's `safeStorage`, which is
-backed by the OS keychain (Keychain on macOS, DPAPI on Windows,
-libsecret/kwallet on Linux). A plain Rust CLI has no equivalent without
-pulling in a native keyring dependency (which needs libsecret/dbus dev
-headers to build on Linux), so `atk` instead encrypts every secret it
-stores — GoDaddy API secrets, and MySQL/PostgreSQL/SSH passwords for the DB
-managers — with AES-256-GCM under a random key stored next to the data
+There's no cross-platform equivalent of an OS-backed keychain (Keychain on
+macOS, DPAPI on Windows, libsecret/kwallet on Linux) without pulling in a
+native keyring dependency (which needs libsecret/dbus dev headers to build
+on Linux), so `atk` instead encrypts every secret it stores — GoDaddy API
+secrets, and MySQL/PostgreSQL/SSH passwords for the DB managers — with
+AES-256-GCM under a random key stored next to the data
 (`.godaddy.key`, owner-only permissions; the name predates it covering more
 than GoDaddy). This protects secrets from casual disk/backup browsing, but
 — unlike an OS keychain — the key lives on the same disk as the ciphertext,
@@ -239,11 +238,10 @@ use.
 
 ## Why one binary
 
-The original tools were four separate stacks (Go x2, Electron/TypeScript,
-Rust) — four toolchains, four install paths, four configs. `atk` bundles
-that plus two new database managers into a single static Rust binary with
-one shared config directory — easier to ship to a server or a teammate,
-and consistent keybindings/theme across every tool.
+Seven sysadmin tools, one static Rust binary, one shared config directory —
+easier to ship to a server or a teammate than juggling separate toolchains,
+install paths, and configs, with consistent keybindings/theme across every
+tool.
 
 ---
 
