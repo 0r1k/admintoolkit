@@ -11,8 +11,8 @@ sysadmin tools:
 |---|---|
 | **SSH Server Manager** | Browse/add/edit/delete hosts straight from `~/.ssh/config` (comments and untouched blocks preserved byte-for-byte), tag servers and browse them by tag like folders, connect with one keypress, pin favorites, ping, copy the resolved `ssh` command, background port forwarding |
 | **SSH User Manager** | Create/remove Linux users + `authorized_keys` on remote hosts, manage reusable SSH key "profiles" |
-| **GoDaddy DNS Manager** | Manage DNS records across multiple GoDaddy API accounts |
 | **Cloudflare DNS Manager** | Manage DNS records across multiple Cloudflare accounts via a scoped API Token — real per-record IDs (Update is a genuine `PUT`, not delete-then-recreate), a Proxied toggle for A/AAAA/CNAME |
+| **GoDaddy DNS Manager** | Manage DNS records across multiple GoDaddy API accounts |
 | **MySQL User Manager** | Create/list/delete MySQL/MariaDB users, rotate passwords, grant privileges — direct or via an SSH jump host |
 | **PostgreSQL User Manager** | Create/list/delete PostgreSQL roles, rotate passwords, grant database privileges — direct or via an SSH jump host |
 | **ClickHouse User Manager** | Create/list/edit/delete ClickHouse users (password, profile, allowed IPs) — direct SQL over HTTP (optionally via an SSH tunnel) or the legacy SSH + `users.d/*.xml` route |

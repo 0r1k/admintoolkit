@@ -37,16 +37,16 @@ const DEFAULT_ITEMS: &[HomeItem] = &[
         screen: Screen::SshUser,
     },
     HomeItem {
-        title: "GoDaddy DNS Manager",
-        desc: "Manage DNS records across multiple GoDaddy API accounts",
-        bin: "domain-api",
-        screen: Screen::GoDaddy,
-    },
-    HomeItem {
         title: "Cloudflare DNS Manager",
         desc: "Manage DNS records across multiple Cloudflare accounts — real per-record IDs, Proxied toggle",
         bin: "cloudflare-dns",
         screen: Screen::Cloudflare,
+    },
+    HomeItem {
+        title: "GoDaddy DNS Manager",
+        desc: "Manage DNS records across multiple GoDaddy API accounts",
+        bin: "domain-api",
+        screen: Screen::GoDaddy,
     },
     HomeItem {
         title: "MySQL User Manager",
