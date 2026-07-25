@@ -435,6 +435,12 @@ impl LogsScreen {
             return false;
         }
 
+        if key.modifiers.contains(KeyModifiers::CONTROL) && matches!(key.code, KeyCode::Up | KeyCode::Down) {
+            self.history_scroll =
+                if key.code == KeyCode::Up { self.history_scroll.saturating_add(3) } else { self.history_scroll.saturating_sub(3) };
+            return false;
+        }
+
         if self.viewer_tab.browser.is_some() {
             self.handle_browser_key(key);
             return false;
@@ -675,7 +681,8 @@ impl LogsScreen {
             return;
         }
         if mouse::in_rect(rows[2], x, y) {
-            self.viewer_tab.source = if vt.source == Source::Journal { Source::File } else { Source::Journal };
+            self.viewer_tab.field = ViewerField::Source;
+            self.viewer_tab.source = if is_journal { Source::File } else { Source::Journal };
             return;
         }
         if mouse::in_rect(rows[unit_row], x, y) {
@@ -699,6 +706,7 @@ impl LogsScreen {
             return;
         }
         if mouse::in_rect(rows[autorefresh_row], x, y) {
+            self.viewer_tab.field = ViewerField::AutoRefresh;
             self.viewer_tab.auto_refresh = !self.viewer_tab.auto_refresh;
             return;
         }

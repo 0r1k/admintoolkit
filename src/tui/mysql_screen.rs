@@ -495,6 +495,12 @@ impl MysqlScreen {
             return false;
         }
 
+        if key.modifiers.contains(KeyModifiers::CONTROL) && matches!(key.code, KeyCode::Up | KeyCode::Down) {
+            self.history_scroll =
+                if key.code == KeyCode::Up { self.history_scroll.saturating_add(3) } else { self.history_scroll.saturating_sub(3) };
+            return false;
+        }
+
         let pickers_closed = self.connections_tab.key_picker.is_none() && self.connections_tab.host_picker.is_none();
         match key.code {
             KeyCode::Esc if !self.users_tab.connection_dropdown_open && self.users_tab.modal.is_none() && pickers_closed => {
@@ -632,6 +638,7 @@ impl MysqlScreen {
         }
 
         if mouse::in_rect(rows2[11], x, y) {
+            self.connections_tab.field = ConnField::UseTunnel;
             self.connections_tab.use_tunnel = !self.connections_tab.use_tunnel;
             return;
         }

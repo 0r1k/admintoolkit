@@ -241,7 +241,7 @@ pub fn draw_modal(f: &mut Frame, title: &str, msg: &str, area: Rect) {
 /// track of new ones arriving below — the offset is *from the bottom*,
 /// so it stays meaningful as more lines get appended while scrolled up.
 pub fn draw_history(f: &mut Frame, history: &[(bool, String)], area: Rect, scroll_up_offset: u16) {
-    let block = theme_block(" History (Ctrl+Y copy) ");
+    let block = theme_block(" History (Ctrl+\u{2191}/\u{2193} scroll, Ctrl+Y copy) ");
     let inner = block.inner(area);
     f.render_widget(block, area);
     let lines: Vec<Line> = history.iter().map(|(ok, line)| Line::from(Span::styled(line.as_str(), Style::default().fg(if *ok { GREEN } else { RED })))).collect();

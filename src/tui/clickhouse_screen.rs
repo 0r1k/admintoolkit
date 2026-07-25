@@ -558,6 +558,12 @@ impl ClickHouseScreen {
             return false;
         }
 
+        if key.modifiers.contains(KeyModifiers::CONTROL) && matches!(key.code, KeyCode::Up | KeyCode::Down) {
+            self.history_scroll =
+                if key.code == KeyCode::Up { self.history_scroll.saturating_add(3) } else { self.history_scroll.saturating_sub(3) };
+            return false;
+        }
+
         let pickers_closed = self.connections_tab.key_picker.is_none() && self.connections_tab.host_picker.is_none();
         match key.code {
             KeyCode::Esc if !self.users_tab.connection_dropdown_open && self.users_tab.modal.is_none() && pickers_closed => {
@@ -706,6 +712,7 @@ impl ClickHouseScreen {
             return;
         }
         if mouse::in_rect(rows2[2], x, y) {
+            self.connections_tab.field = ConnField::Mode;
             self.connections_tab.mode_is_sql = !self.connections_tab.mode_is_sql;
             return;
         }
@@ -719,6 +726,7 @@ impl ClickHouseScreen {
                 }
             }
             if mouse::in_rect(rows2[13], x, y) {
+                self.connections_tab.field = ConnField::UseTunnel;
                 self.connections_tab.use_tunnel = !self.connections_tab.use_tunnel;
                 return;
             }
@@ -755,6 +763,7 @@ impl ClickHouseScreen {
                 }
             }
             if mouse::in_rect(rows2[14], x, y) {
+                self.connections_tab.field = ConnField::TagMode;
                 self.connections_tab.tag_mode_idx = (self.connections_tab.tag_mode_idx + 1) % config::TAG_MODES.len();
             }
         }

@@ -100,12 +100,17 @@ struct App {
     /// any other event ever arriving.
     last_click: Option<(u16, u16, Instant)>,
     /// Whether mouse-reporting escape sequences are currently turned on.
-    /// `F12` flips this — while it's off, the terminal handles mouse drags
-    /// itself again (native text selection) instead of every click/drag
-    /// being consumed as an app event. `run_app` compares this against
-    /// what the terminal is actually set to and (de)activates capture
-    /// on change; it can't be done here since that needs the terminal
-    /// handle, which `App` doesn't own.
+    /// Off by default: the app is keyboard-first, and with capture off the
+    /// terminal handles clicks/drags itself, so native text selection and
+    /// its usual copy shortcut (Ctrl+Shift+C, Cmd+C, right-click, ...) just
+    /// work without the app's involvement. `F12` flips this on for anyone
+    /// who wants click-to-select on tabs/buttons/table rows and
+    /// wheel-scroll — every one of those is exactly what the equivalent
+    /// keypress already does, so turning it on never adds a click-only
+    /// capability, only a second way to reach one that already exists.
+    /// `run_app` compares this against what the terminal is actually set
+    /// to and (de)activates capture on change; it can't be done here since
+    /// that needs the terminal handle, which `App` doesn't own.
     mouse_enabled: bool,
 }
 
@@ -130,7 +135,7 @@ impl App {
             kerneltune: None,
             should_quit: false,
             last_click: None,
-            mouse_enabled: true,
+            mouse_enabled: false,
         }
     }
 
@@ -438,7 +443,10 @@ impl App {
 pub fn run() -> io::Result<()> {
     enable_raw_mode()?;
     let mut stdout = io::stdout();
-    execute!(stdout, EnterAlternateScreen, EnableMouseCaptureMinimal, EnableBracketedPaste)?;
+    // Mouse capture starts off (see `App::mouse_enabled`) — `run_app`'s
+    // first iteration reconciles it against `App::new()`'s default, so
+    // it's deliberately not requested here.
+    execute!(stdout, EnterAlternateScreen, EnableBracketedPaste)?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
@@ -452,7 +460,7 @@ pub fn run() -> io::Result<()> {
 }
 
 fn run_app<B: ratatui::backend::Backend + io::Write>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<()> {
-    let mut mouse_capture_active = true;
+    let mut mouse_capture_active = false;
     loop {
         app.tick();
         terminal.draw(|f| app.draw(f))?;

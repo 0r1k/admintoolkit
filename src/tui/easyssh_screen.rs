@@ -478,6 +478,12 @@ impl EasySshScreen {
             return false;
         }
 
+        if key.modifiers.contains(KeyModifiers::CONTROL) && matches!(key.code, KeyCode::Up | KeyCode::Down) {
+            self.history_scroll =
+                if key.code == KeyCode::Up { self.history_scroll.saturating_add(3) } else { self.history_scroll.saturating_sub(3) };
+            return false;
+        }
+
         if let Some(modal) = self.modal.take() {
             let (modal, close) = self.handle_modal_key(modal, key);
             if !close {

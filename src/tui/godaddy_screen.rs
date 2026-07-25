@@ -567,6 +567,12 @@ impl GoDaddyScreen {
             return false;
         }
 
+        if key.modifiers.contains(KeyModifiers::CONTROL) && matches!(key.code, KeyCode::Up | KeyCode::Down) {
+            self.history_scroll =
+                if key.code == KeyCode::Up { self.history_scroll.saturating_add(3) } else { self.history_scroll.saturating_sub(3) };
+            return false;
+        }
+
         match key.code {
             KeyCode::Esc
                 if !self.records_tab.account_dropdown_open
@@ -708,6 +714,22 @@ impl GoDaddyScreen {
         if self.records_tab.modal.is_some() {
             return;
         }
+
+        // Must come before any hit-testing below: with a dropdown floating
+        // on screen, a click anywhere dismisses it (matching Esc) rather
+        // than falling through to whatever field/row is underneath it, and
+        // a wheel scroll is ignored rather than silently scrolling the
+        // records table or history panel *behind* the dropdown — the same
+        // gap keyboard Up/Down doesn't have, since that's already scoped to
+        // the dropdown by `handle_account_dropdown_key`/`handle_domain_dropdown_key`.
+        if self.records_tab.account_dropdown_open || self.records_tab.domain_dropdown_open {
+            if mouse::left_click(&me).is_some() {
+                self.records_tab.account_dropdown_open = false;
+                self.records_tab.domain_dropdown_open = false;
+            }
+            return;
+        }
+
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
@@ -735,17 +757,6 @@ impl GoDaddyScreen {
         }
 
         let Some((x, y)) = mouse::left_click(&me) else { return };
-
-        if self.records_tab.account_dropdown_open || self.records_tab.domain_dropdown_open {
-            // A precise hit-test against the dropdown's own floating
-            // position isn't worth it for a first pass — clicking
-            // anywhere just dismisses it, matching Esc, and the field
-            // click below (on the next event) re-opens it if that's
-            // where the click lands.
-            self.records_tab.account_dropdown_open = false;
-            self.records_tab.domain_dropdown_open = false;
-            return;
-        }
 
         // ── Fetch box ──
         let top_inner = mouse::block_inner(chunks[0]);
@@ -970,6 +981,16 @@ impl GoDaddyScreen {
         if activate {
             return self.handle_add_modal_key(m, KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
         }
+        // Mirrors `handle_add_modal_key`'s `is_discard_attempt` guard: only
+        // a Cancel click can be a discard attempt, and that always sets
+        // `activate` above, so every click that reaches here is — like any
+        // non-Esc/non-Cancel keypress — proof the user isn't confirming a
+        // pending discard, and should disarm it. Without this, an armed
+        // "press Cancel again to confirm" from an earlier Esc/Cancel could
+        // survive an unrelated field click and get silently consumed by a
+        // *later, single* Cancel click, discarding staged records with no
+        // second confirmation ever shown.
+        m.confirm_discard = false;
         false
     }
 

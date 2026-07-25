@@ -299,7 +299,7 @@ pub fn draw(f: &mut Frame, state: &HomeState, area: Rect) {
 
     f.render_widget(
         Paragraph::new(Line::from(Span::styled(
-            "\u{2191}\u{2193}/1-8 select  Enter open  Shift+K/J move up/down  Ctrl+C quit",
+            "\u{2191}\u{2193}/1-8 select  Enter open  Shift+K/J move up/down  F12 mouse  Ctrl+C quit",
             lbl(),
         )))
         .alignment(Alignment::Center),

@@ -472,6 +472,11 @@ impl KernelTuneScreen {
             self.history.push((ok, if ok { "History copied to clipboard".to_string() } else { "Couldn't access the clipboard".to_string() }));
             return false;
         }
+        if key.modifiers.contains(KeyModifiers::CONTROL) && matches!(key.code, KeyCode::Up | KeyCode::Down) {
+            self.history_scroll =
+                if key.code == KeyCode::Up { self.history_scroll.saturating_add(3) } else { self.history_scroll.saturating_sub(3) };
+            return false;
+        }
 
         let pickers_open = self.target_tab.host_picker.is_some() || self.target_tab.key_picker.is_some();
         let detail_open = self.catalog_tab.detail.is_some();
@@ -860,6 +865,12 @@ impl KernelTuneScreen {
         match key.code {
             KeyCode::Tab => self.review_tab.next_field(),
             KeyCode::BackTab => self.review_tab.prev_field(),
+            // Table row Up/Down is handled above and returns early whenever
+            // the table has rows to move through; these only fire once
+            // focus has moved past it (or the table is empty), matching
+            // every other tab's Up/Down-as-Tab-equivalent convention.
+            KeyCode::Up => self.review_tab.prev_field(),
+            KeyCode::Down => self.review_tab.next_field(),
             KeyCode::Enter => match self.review_tab.field {
                 ReviewField::BtnPersistAll => {
                     let all_on = !self.staged.is_empty() && self.staged.iter().all(|s| s.persist);
@@ -1159,6 +1170,7 @@ impl KernelTuneScreen {
         let rows = target_form_rows(form_inner, is_remote);
 
         if let Some(i) = mouse::label_row_hit(x, y, rows[0], &["Local", "Remote"]) {
+            self.target_tab.field = TargetField::Mode;
             self.target_tab.is_remote = i == 1;
             return;
         }
