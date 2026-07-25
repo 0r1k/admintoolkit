@@ -13,7 +13,7 @@ use ratatui::{
 
 // ── Palette ──────────────────────────────────────────────────────────────
 // Each of these reads the current theme (see `theme.rs`) fresh every call,
-// rather than being fixed constants — that's what makes `F11`-cycling the
+// rather than being fixed constants — that's what makes `F9`-cycling the
 // theme repaint every screen immediately. The default theme, `Classic`, is
 // atk's original hand-picked palette verbatim, so a fresh install (or a
 // missing/corrupt theme.json) looks exactly like it always did.

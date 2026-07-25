@@ -350,9 +350,12 @@ impl App {
         }
 
         // Global, works from any screen: cycles the color theme (see
-        // `theme.rs`) and persists the choice immediately. Shift+F11 goes
-        // back a step, for whoever overshoots the one they wanted.
-        if key.code == crossterm::event::KeyCode::F(11) {
+        // `theme.rs`) and persists the choice immediately. Shift+F9 goes
+        // back a step, for whoever overshoots the one they wanted. F9
+        // rather than F11 specifically — F11 is "toggle fullscreen" at the
+        // terminal-emulator or window-manager level almost everywhere, so
+        // it frequently never reaches the app at all.
+        if key.code == crossterm::event::KeyCode::F(9) {
             theme::cycle(if key.modifiers.contains(KeyModifiers::SHIFT) { -1 } else { 1 });
             return;
         }

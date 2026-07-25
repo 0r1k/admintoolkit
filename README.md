@@ -56,7 +56,7 @@ but each keeps its own file inside it, so the tools stay independent:
 admintoolkit/
 ├── easyssh.json        SSH Server Manager: tags/pin/last-seen/SSH-count metadata (servers themselves live in ~/.ssh/config)
 ├── menu_order.json     Home menu: your custom tool order, if you've moved anything with K/J
-├── theme.json          Your chosen color theme (F11/Shift+F11 to cycle)
+├── theme.json          Your chosen color theme (F9/Shift+F9 to cycle)
 ├── ssh_users.json     SSH User Manager: profiles + default SSH settings
 ├── clickhouse.json    ClickHouse Manager: connection profiles (mode, host/port/user or SSH target, encrypted passwords)
 ├── godaddy.json        GoDaddy Manager: accounts (label, API key, encrypted secret)
@@ -261,7 +261,7 @@ Every screen follows the same pattern:
 | `Ctrl+C` | Quit immediately from anywhere |
 | `Ctrl+Y` | Copy the History panel to the clipboard |
 | `Ctrl+↑` / `Ctrl+↓` | Scroll the History panel |
-| `F11` / `Shift+F11` | Cycle the color theme forward / backward (see Themes below) |
+| `F9` / `Shift+F9` | Cycle the color theme forward / backward (see Themes below) |
 | `F12` | Toggle mouse capture on/off (see Mouse support below) |
 
 The SSH Server Manager's server list has its own richer keymap (`F1`
@@ -298,7 +298,7 @@ makes keyboard input feel broken under mixed mouse+keyboard use.
 
 ## Themes
 
-`F11` cycles the color theme (`Shift+F11` goes back); the current one is
+`F9` cycles the color theme (`Shift+F9` goes back); the current one is
 shown on the home screen. 16 in total — atk's original hand-picked
 palette (`Classic`, the default, so a fresh install looks exactly like it
 always has) plus 15 ported from
