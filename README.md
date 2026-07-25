@@ -2,7 +2,9 @@
 
 By [or1k.net](https://or1k.net)
 
-A single Rust + [ratatui](https://ratatui.rs) TUI binary that bundles seven
+![atk home menu](docs/screenshot.png)
+
+A single Rust + [ratatui](https://ratatui.rs) TUI binary that bundles eight
 sysadmin tools:
 
 | Module | What it does |
@@ -14,6 +16,7 @@ sysadmin tools:
 | **PostgreSQL User Manager** | Create/list/delete PostgreSQL roles, rotate passwords, grant database privileges — direct or via an SSH jump host |
 | **ClickHouse User Manager** | Create/list/edit/delete ClickHouse users (password, profile, allowed IPs) — direct SQL over HTTP (optionally via an SSH tunnel) or the legacy SSH + `users.d/*.xml` route |
 | **Logs & Journals Reader** | SSH in and read the systemd journal (`journalctl`) or a plain file under `/var/log` (browsable), with severity filtering (warning/error/crit/...), text search, and optional auto-refresh |
+| **Kernel Tuner** | Best-practice sysctl/sysfs/ulimit tuning (51 curated tunables, each with a plain-English why) for desktop, database, traffic, gaming, AI/compute or security-hardening workloads — local or remote over SSH, runtime-only unless you opt into persisting |
 
 The MySQL, PostgreSQL and ClickHouse managers all save reusable **connection
 profiles** (label, host, port, DB user, encrypted password, optional SSH
@@ -38,7 +41,7 @@ cargo build --release
 
 ## Config
 
-All seven modules share one config directory:
+All eight modules share one config directory:
 
 ```text
 Linux:   ~/.config/admintoolkit/
@@ -58,6 +61,7 @@ admintoolkit/
 ├── mysql.json          MySQL Manager: connection profiles (host/port/user, encrypted DB + SSH passwords)
 ├── postgresql.json     PostgreSQL Manager: same, for Postgres
 ├── logs.json            Logs & Journals Reader: connection profiles (host/SSH user/key, encrypted SSH password)
+├── kerneltune_history.json  Kernel Tuner: per-target history of applied/persisted changes, for Revert
 └── .godaddy.key         random AES-256 key used to encrypt every secret above at rest
 ```
 
@@ -179,6 +183,26 @@ automatically too — no separate "Fetch" click needed unless you want a
 manual refresh. Press `y` on a selected record to copy its Value to the
 clipboard (the IP an A record points at, say).
 
+### Kernel Tuner
+
+A curated catalog of 51 kernel tunables — sysctl keys, a handful of
+sysfs-backed knobs (CPU governor, I/O scheduler, transparent hugepage), and
+`/etc/security/limits.d` entries — each with a plain-English description,
+the actual *why*, and per-scenario recommended values. Four tabs: **Target**
+(local or a remote host over SSH), **Catalog** (filter by category or pick a
+usage profile — Desktop, Traffic, Database, Gaming, AI/Compute, Security —
+to bulk-stage its recommendations, still hand-editable afterward), **Review**
+(the staged diff, Apply All/Clear All), **Revert** (history of everything
+atk changed on that target, revert one entry or all of them).
+
+Applying a value only ever runs `sysctl -w` (or the sysfs/limits
+equivalent) at runtime — `/etc/sysctl.conf` and `/etc/security/limits.conf`
+are never touched unless you explicitly opt into persisting, at which point
+it drops a scoped `/etc/sysctl.d/99-atk-tuning.conf`, a small systemd
+oneshot unit to replay sysfs values at boot, or the relevant `limits.d`
+entry. Revert knows about that distinction too, and cleans up the
+persisted entry along with the live value.
+
 ## CLI (scriptable, non-interactive)
 
 The SSH User Manager also has a non-interactive CLI, useful for scripting
@@ -238,7 +262,7 @@ use.
 
 ## Why one binary
 
-Seven sysadmin tools, one static Rust binary, one shared config directory —
+Eight sysadmin tools, one static Rust binary, one shared config directory —
 easier to ship to a server or a teammate than juggling separate toolchains,
 install paths, and configs, with consistent keybindings/theme across every
 tool.
