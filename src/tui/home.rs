@@ -43,6 +43,12 @@ const DEFAULT_ITEMS: &[HomeItem] = &[
         screen: Screen::GoDaddy,
     },
     HomeItem {
+        title: "Cloudflare DNS Manager",
+        desc: "Manage DNS records across multiple Cloudflare accounts — real per-record IDs, Proxied toggle",
+        bin: "cloudflare-dns",
+        screen: Screen::Cloudflare,
+    },
+    HomeItem {
         title: "MySQL User Manager",
         desc: "Create, list, delete MySQL/MariaDB users — direct or via SSH tunnel",
         bin: "mysql-mgr",
@@ -80,6 +86,7 @@ fn screen_key(s: Screen) -> &'static str {
         Screen::EasySsh => "easyssh",
         Screen::SshUser => "sshuser",
         Screen::GoDaddy => "godaddy",
+        Screen::Cloudflare => "cloudflare",
         Screen::Mysql => "mysql",
         Screen::Postgresql => "postgresql",
         Screen::ClickHouse => "clickhouse",
@@ -93,6 +100,7 @@ fn screen_from_key(key: &str) -> Option<Screen> {
         "easyssh" => Some(Screen::EasySsh),
         "sshuser" => Some(Screen::SshUser),
         "godaddy" => Some(Screen::GoDaddy),
+        "cloudflare" => Some(Screen::Cloudflare),
         "mysql" => Some(Screen::Mysql),
         "postgresql" => Some(Screen::Postgresql),
         "clickhouse" => Some(Screen::ClickHouse),
@@ -299,7 +307,7 @@ pub fn draw(f: &mut Frame, state: &HomeState, area: Rect) {
 
     f.render_widget(
         Paragraph::new(Line::from(Span::styled(
-            "\u{2191}\u{2193}/1-8 select  Enter open  Shift+K/J move up/down  F12 mouse  Ctrl+C quit",
+            "\u{2191}\u{2193}/1-9 select  Enter open  Shift+K/J move up/down  F12 mouse  Ctrl+C quit",
             lbl(),
         )))
         .alignment(Alignment::Center),

@@ -1,6 +1,7 @@
 pub mod widgets;
 
 mod clickhouse_screen;
+mod cloudflare_screen;
 mod easyssh_screen;
 mod file_picker;
 mod godaddy_screen;
@@ -58,6 +59,7 @@ enum Screen {
     EasySsh,
     SshUser,
     GoDaddy,
+    Cloudflare,
     Mysql,
     Postgresql,
     ClickHouse,
@@ -82,6 +84,7 @@ struct App {
     easyssh: Option<easyssh_screen::EasySshScreen>,
     sshuser: Option<sshuser_screen::SshUserScreen>,
     godaddy: Option<godaddy_screen::GoDaddyScreen>,
+    cloudflare: Option<cloudflare_screen::CloudflareScreen>,
     mysql: Option<mysql_screen::MysqlScreen>,
     postgresql: Option<postgresql_screen::PostgresqlScreen>,
     clickhouse: Option<clickhouse_screen::ClickHouseScreen>,
@@ -128,6 +131,7 @@ impl App {
             easyssh: None,
             sshuser: None,
             godaddy: None,
+            cloudflare: None,
             mysql: None,
             postgresql: None,
             clickhouse: None,
@@ -154,6 +158,11 @@ impl App {
             Screen::GoDaddy => {
                 if self.godaddy.is_none() {
                     self.godaddy = Some(godaddy_screen::GoDaddyScreen::new());
+                }
+            }
+            Screen::Cloudflare => {
+                if self.cloudflare.is_none() {
+                    self.cloudflare = Some(cloudflare_screen::CloudflareScreen::new());
                 }
             }
             Screen::Mysql => {
@@ -194,6 +203,9 @@ impl App {
             s.tick();
         }
         if let Some(s) = &mut self.godaddy {
+            s.tick();
+        }
+        if let Some(s) = &mut self.cloudflare {
             s.tick();
         }
         if let Some(s) = &mut self.mysql {
@@ -284,6 +296,11 @@ impl App {
                     s.handle_mouse(me, area);
                 }
             }
+            Screen::Cloudflare => {
+                if let Some(s) = &mut self.cloudflare {
+                    s.handle_mouse(me, area);
+                }
+            }
             Screen::Mysql => {
                 if let Some(s) = &mut self.mysql {
                     s.handle_mouse(me, area);
@@ -358,6 +375,12 @@ impl App {
                     self.screen = Screen::Home;
                 }
             }
+            Screen::Cloudflare => {
+                let back = self.cloudflare.as_mut().map(|s| s.handle_key(key)).unwrap_or(true);
+                if back {
+                    self.screen = Screen::Home;
+                }
+            }
             Screen::Mysql => {
                 let back = self.mysql.as_mut().map(|s| s.handle_key(key)).unwrap_or(true);
                 if back {
@@ -408,6 +431,11 @@ impl App {
             }
             Screen::GoDaddy => {
                 if let Some(s) = &self.godaddy {
+                    s.draw(f, area);
+                }
+            }
+            Screen::Cloudflare => {
+                if let Some(s) = &self.cloudflare {
                     s.draw(f, area);
                 }
             }

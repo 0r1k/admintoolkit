@@ -2,6 +2,7 @@ use clap::{Parser, Subcommand};
 use std::process;
 
 mod clickhouse;
+mod cloudflare;
 mod config;
 mod easyssh_mgr;
 mod godaddy;

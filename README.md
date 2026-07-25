@@ -4,7 +4,7 @@ By [or1k.net](https://or1k.net)
 
 ![atk home menu](docs/screenshot.png)
 
-A single Rust + [ratatui](https://ratatui.rs) TUI binary that bundles eight
+A single Rust + [ratatui](https://ratatui.rs) TUI binary that bundles nine
 sysadmin tools:
 
 | Module | What it does |
@@ -12,6 +12,7 @@ sysadmin tools:
 | **SSH Server Manager** | Browse/add/edit/delete hosts straight from `~/.ssh/config` (comments and untouched blocks preserved byte-for-byte), tag servers and browse them by tag like folders, connect with one keypress, pin favorites, ping, copy the resolved `ssh` command, background port forwarding |
 | **SSH User Manager** | Create/remove Linux users + `authorized_keys` on remote hosts, manage reusable SSH key "profiles" |
 | **GoDaddy DNS Manager** | Manage DNS records across multiple GoDaddy API accounts |
+| **Cloudflare DNS Manager** | Manage DNS records across multiple Cloudflare accounts via a scoped API Token — real per-record IDs (Update is a genuine `PUT`, not delete-then-recreate), a Proxied toggle for A/AAAA/CNAME |
 | **MySQL User Manager** | Create/list/delete MySQL/MariaDB users, rotate passwords, grant privileges — direct or via an SSH jump host |
 | **PostgreSQL User Manager** | Create/list/delete PostgreSQL roles, rotate passwords, grant database privileges — direct or via an SSH jump host |
 | **ClickHouse User Manager** | Create/list/edit/delete ClickHouse users (password, profile, allowed IPs) — direct SQL over HTTP (optionally via an SSH tunnel) or the legacy SSH + `users.d/*.xml` route |
@@ -41,7 +42,7 @@ cargo build --release
 
 ## Config
 
-All eight modules share one config directory:
+All nine modules share one config directory:
 
 ```text
 Linux:   ~/.config/admintoolkit/
@@ -58,6 +59,7 @@ admintoolkit/
 ├── ssh_users.json     SSH User Manager: profiles + default SSH settings
 ├── clickhouse.json    ClickHouse Manager: connection profiles (mode, host/port/user or SSH target, encrypted passwords)
 ├── godaddy.json        GoDaddy Manager: accounts (label, API key, encrypted secret)
+├── cloudflare.json     Cloudflare Manager: accounts (label, encrypted API Token)
 ├── mysql.json          MySQL Manager: connection profiles (host/port/user, encrypted DB + SSH passwords)
 ├── postgresql.json     PostgreSQL Manager: same, for Postgres
 ├── logs.json            Logs & Journals Reader: connection profiles (host/SSH user/key, encrypted SSH password)
@@ -183,6 +185,24 @@ automatically too — no separate "Fetch" click needed unless you want a
 manual refresh. Press `y` on a selected record to copy its Value to the
 clipboard (the IP an A record points at, say).
 
+### Cloudflare DNS Manager
+
+Same shape as the GoDaddy manager (Accounts / Records tabs, Fetch, global
+Search, Add/Edit/Delete modals), authenticated with a single scoped API
+Token instead of a key+secret pair — create one under
+My Profile → API Tokens with `Zone.Zone` (Read) and `Zone.DNS` (Edit)
+permissions rather than reusing the legacy Global API Key, which grants
+unscoped access to the whole account. "Test Token" confirms it's valid and
+reports how many zones it can see.
+
+Two real differences from GoDaddy, both because Cloudflare's API is
+better-shaped for this: every record has a stable ID, so Update is a
+genuine `PUT` by that ID instead of GoDaddy's delete-then-recreate
+workaround; and A/AAAA/CNAME records get a **Proxied** toggle (Cloudflare's
+orange-cloud proxy/CDN, versus grey-cloud DNS-only) right in the Add/Edit
+form. TTL follows Cloudflare's own convention — `1` means "Automatic" and
+is the default for new records; the table shows it as `Auto`.
+
 ### Kernel Tuner
 
 A curated catalog of 134 kernel tunables, grounded in the kernel's own
@@ -276,7 +296,7 @@ makes keyboard input feel broken under mixed mouse+keyboard use.
 
 ## Why one binary
 
-Eight sysadmin tools, one static Rust binary, one shared config directory —
+Nine sysadmin tools, one static Rust binary, one shared config directory —
 easier to ship to a server or a teammate than juggling separate toolchains,
 install paths, and configs, with consistent keybindings/theme across every
 tool.
