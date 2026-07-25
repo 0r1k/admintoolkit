@@ -232,6 +232,9 @@ Every screen follows the same pattern:
 | `F1`..`F4` | Switch tab within a tool |
 | `Esc` | Close a modal / dropdown, otherwise go back to the home menu |
 | `Ctrl+C` | Quit immediately from anywhere |
+| `Ctrl+Y` | Copy the History panel to the clipboard |
+| `Ctrl+↑` / `Ctrl+↓` | Scroll the History panel |
+| `F12` | Toggle mouse capture on/off (see Mouse support below) |
 
 The SSH Server Manager's server list has its own richer keymap (`F1`
 Servers / `F2` Tags, then on a row): `Enter` connect, `a` add, `e` edit,
@@ -241,24 +244,29 @@ sort field/direction, `/` search.
 
 ## Mouse support
 
-Every screen's tab bar, tables, buttons, and input fields are clickable —
-click a tab to switch to it, click a table row to select and open/load it
-(the same thing `Enter` does), click a field to focus it, click a button
-to activate it, and scroll the wheel over a table/list — including the
-History log panel every screen has, which can be scrolled back through —
-to move the selection or scroll the text. GoDaddy's Add/Edit DNS Record
-dialog has full click support too (fields, the type toggle, the pending
-list, Save/Cancel). This covers the main flow of every tool; a few deep
+atk is keyboard-first: every action reachable by mouse is reachable the
+same way by keyboard, so mouse capture is **off by default**. With it off,
+the terminal handles clicks and drags itself, which means native text
+selection and its usual copy shortcut (Ctrl+Shift+C, Cmd+C, right-click,
+...) just work, untouched by the app.
+
+`F12` turns capture on for anyone who wants it. Once on, every screen's
+tab bar, tables, buttons, and input fields are clickable — click a tab to
+switch to it, click a table row to select and open/load it (the same
+thing `Enter` does), click a field to focus it, click a button to
+activate it, and scroll the wheel over a table/list — including the
+History log panel every screen has — to move the selection or scroll the
+text. GoDaddy's Add/Edit DNS Record dialog has full click support too
+(fields, the type toggle, the pending list, Save/Cancel). A few dense
 modal forms (the SSH Server Manager's full Add/Edit Server dialog, the
-MySQL/PostgreSQL/ClickHouse Add/Edit User dialogs) are still
-keyboard-only, since their forms are dense enough that Tab navigation is
+MySQL/PostgreSQL/ClickHouse Add/Edit User dialogs) are keyboard-only even
+with capture on, since their forms are dense enough that Tab navigation is
 still the fastest way through them.
 
-Mouse capture only requests click and scroll reporting, not continuous
-motion tracking — some terminals otherwise flood the input stream with a
-mouse event per pixel of movement, which queues up ahead of keystrokes
-and makes keyboard input feel broken under normal mixed mouse+keyboard
-use.
+Capture only requests click and scroll reporting, not continuous motion
+tracking — some terminals otherwise flood the input stream with a mouse
+event per pixel of movement, which queues up ahead of keystrokes and
+makes keyboard input feel broken under mixed mouse+keyboard use.
 
 ## Why one binary
 
