@@ -988,7 +988,7 @@ impl CloudflareScreen {
     /// a keyboard Enter for anything that acts rather than just focuses.
     /// Row offsets mirror `draw_edit_modal`.
     fn handle_edit_modal_mouse(&mut self, m: &mut EditModal, me: MouseEvent, area: Rect) -> bool {
-        let width = 80u16.min(area.width.saturating_sub(4));
+        let width = 92u16.min(area.width.saturating_sub(4));
         let height = 15u16.min(area.height.saturating_sub(2));
         let modal_area = centered_rect(width, height, area);
         let inner = mouse::block_inner(modal_area);
@@ -2455,7 +2455,7 @@ impl CloudflareScreen {
     }
 
     fn draw_edit_modal(&self, f: &mut Frame, m: &EditModal, area: Rect) {
-        let width = 80u16.min(area.width.saturating_sub(4));
+        let width = 92u16.min(area.width.saturating_sub(4));
         let height = 15u16.min(area.height.saturating_sub(2));
         let modal_area = centered_rect(width, height, area);
 
