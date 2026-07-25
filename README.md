@@ -16,7 +16,7 @@ sysadmin tools:
 | **PostgreSQL User Manager** | Create/list/delete PostgreSQL roles, rotate passwords, grant database privileges — direct or via an SSH jump host |
 | **ClickHouse User Manager** | Create/list/edit/delete ClickHouse users (password, profile, allowed IPs) — direct SQL over HTTP (optionally via an SSH tunnel) or the legacy SSH + `users.d/*.xml` route |
 | **Logs & Journals Reader** | SSH in and read the systemd journal (`journalctl`) or a plain file under `/var/log` (browsable), with severity filtering (warning/error/crit/...), text search, and optional auto-refresh |
-| **Kernel Tuner** | Best-practice sysctl/sysfs/ulimit tuning (51 curated tunables, each with a plain-English why) for desktop, database, traffic, gaming, AI/compute or security-hardening workloads — local or remote over SSH, runtime-only unless you opt into persisting |
+| **Kernel Tuner** | Best-practice sysctl/sysfs/ulimit tuning (134 curated tunables, each with a plain-English why) for desktop, database, traffic, gaming, AI/compute, container/Kubernetes, low-latency, laptop, storage, or security-hardening workloads — local or remote over SSH, runtime-only unless you opt into persisting |
 
 The MySQL, PostgreSQL and ClickHouse managers all save reusable **connection
 profiles** (label, host, port, DB user, encrypted password, optional SSH
@@ -185,12 +185,18 @@ clipboard (the IP an A record points at, say).
 
 ### Kernel Tuner
 
-A curated catalog of 51 kernel tunables — sysctl keys, a handful of
-sysfs-backed knobs (CPU governor, I/O scheduler, transparent hugepage), and
-`/etc/security/limits.d` entries — each with a plain-English description,
-the actual *why*, and per-scenario recommended values. Four tabs: **Target**
-(local or a remote host over SSH), **Catalog** (filter by category or pick a
-usage profile — Desktop, Traffic, Database, Gaming, AI/Compute, Security —
+A curated catalog of 134 kernel tunables, grounded in the kernel's own
+[sysctl documentation](https://www.kernel.org/doc/html/latest/admin-guide/sysctl/) —
+sysctl keys, a handful of sysfs-backed knobs (CPU governor, I/O scheduler,
+transparent hugepage, energy/performance bias), and `/etc/security/limits.d`
+entries — each with a plain-English description, the actual *why* (including
+honest tradeoffs, not just "set this to go fast"), and per-scenario
+recommended values. Four tabs: **Target** (local or a remote host over SSH),
+**Catalog** (filter by category — Network, Memory/VM, Filesystem & Limits,
+CPU & Scheduler, Security Hardening, Containers & Virtualization — or pick a
+usage profile — Desktop, Network/Traffic/Web Server, Database/Big Data,
+Gaming Server, AI/Compute Server, Security Hardening, Container/Kubernetes
+Host, Low-Latency/Real-Time, Laptop/Power Saving, Storage/NAS/File Server —
 to bulk-stage its recommendations, still hand-editable afterward), **Review**
 (the staged diff, Apply All/Clear All), **Revert** (history of everything
 atk changed on that target, revert one entry or all of them).
