@@ -1156,12 +1156,12 @@ impl EasySshScreen {
 
         let tab_bar = Line::from(vec![
             tab_span("F1 Servers", self.tab == Tab::Servers),
-            Span::styled("  ", Style::default().bg(BG)),
+            Span::styled("  ", Style::default().bg(bg())),
             tab_span("F2 Tags", self.tab == Tab::Tags),
-            Span::styled("  ", Style::default().bg(BG)),
-            Span::styled("Esc back  Ctrl+C quit", Style::default().fg(FG2).bg(BG)),
+            Span::styled("  ", Style::default().bg(bg())),
+            Span::styled("Esc back  Ctrl+C quit", Style::default().fg(fg2()).bg(bg())),
         ]);
-        f.render_widget(Paragraph::new(tab_bar).style(Style::default().bg(BG)), chunks[0]);
+        f.render_widget(Paragraph::new(tab_bar).style(Style::default().bg(bg())), chunks[0]);
 
         match self.tab {
             Tab::Servers => self.draw_servers(f, chunks[1]),
@@ -1222,13 +1222,13 @@ impl EasySshScreen {
             .iter()
             .map(|(tag, count)| {
                 ListItem::new(Line::from(vec![
-                    Span::styled(format!("  {tag}"), Style::default().fg(FG)),
-                    Span::styled(format!("  ({count})"), Style::default().fg(FG2)),
+                    Span::styled(format!("  {tag}"), Style::default().fg(fg())),
+                    Span::styled(format!("  ({count})"), Style::default().fg(fg2())),
                 ]))
             })
             .collect();
         let title = format!(" Tags ({}) \u{2014} group servers by tag, like folders ", tags.len());
-        let list = List::new(items).block(theme_block(&title)).style(Style::default().bg(BG)).highlight_style(focused()).highlight_symbol(" \u{25B6} ");
+        let list = List::new(items).block(theme_block(&title)).style(Style::default().bg(bg())).highlight_style(focused()).highlight_symbol(" \u{25B6} ");
         let mut lstate = ListState::default();
         if !tags.is_empty() {
             lstate.select(Some(self.tags_selected_row.min(tags.len() - 1)));
@@ -1253,14 +1253,14 @@ impl EasySshScreen {
     fn draw_server_table(&self, f: &mut Frame, rows: &[&Server], area: Rect, title: &str, focused_table: bool) {
         let header = Row::new(vec![
             Cell::from(""),
-            Cell::from(Span::styled("Alias", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
-            Cell::from(Span::styled("Host", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
-            Cell::from(Span::styled("User", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
-            Cell::from(Span::styled("Tags", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
-            Cell::from(Span::styled("Last SSH", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
-            Cell::from(Span::styled("Fwd", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("Alias", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("Host", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("User", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("Tags", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("Last SSH", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("Fwd", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
         ])
-        .style(Style::default().bg(BG2));
+        .style(Style::default().bg(bg2()));
 
         let table_rows: Vec<Row> = rows
             .iter()
@@ -1268,13 +1268,13 @@ impl EasySshScreen {
                 let pin = if s.is_pinned() { "\u{2605}" } else { "" };
                 let fwd = if launcher::is_forwarding(&s.alias) { "F" } else { "" };
                 Row::new(vec![
-                    Cell::from(Span::styled(pin, Style::default().fg(YELLOW))),
+                    Cell::from(Span::styled(pin, Style::default().fg(yellow()))),
                     Cell::from(s.alias.clone()),
                     Cell::from(s.effective_host().to_string()),
                     Cell::from(s.user.clone()),
                     Cell::from(s.tags.join(", ")),
                     Cell::from(config::humanize_timestamp(&s.last_seen)),
-                    Cell::from(Span::styled(fwd, Style::default().fg(GREEN))),
+                    Cell::from(Span::styled(fwd, Style::default().fg(green()))),
                 ])
             })
             .collect();
@@ -1295,7 +1295,7 @@ impl EasySshScreen {
         .block(theme_block(title))
         .row_highlight_style(if focused_table { focused() } else { normal() })
         .highlight_symbol(" \u{25B6} ")
-        .style(Style::default().fg(FG).bg(BG));
+        .style(Style::default().fg(fg()).bg(bg()));
 
         let mut tstate = TableState::default();
         if !rows.is_empty() {
@@ -1320,10 +1320,10 @@ impl EasySshScreen {
         f.render_widget(Clear, modal_area);
         let title = if form.is_add() { " Add Server " } else { " Edit Server " };
         let block = Block::default()
-            .title(Span::styled(title, Style::default().fg(TITLE)))
+            .title(Span::styled(title, Style::default().fg(title_color())))
             .borders(Borders::ALL)
-            .border_style(Style::default().fg(ACCENT))
-            .style(Style::default().bg(BG2));
+            .border_style(Style::default().fg(accent()))
+            .style(Style::default().bg(bg2()));
         let inner = block.inner(modal_area);
         f.render_widget(block, modal_area);
 
@@ -1445,10 +1445,10 @@ impl EasySshScreen {
         let modal_area = centered_rect(width, height, area);
         f.render_widget(Clear, modal_area);
         let block = Block::default()
-            .title(Span::styled(format!(" Edit Tags: {} ", m.alias), Style::default().fg(TITLE)))
+            .title(Span::styled(format!(" Edit Tags: {} ", m.alias), Style::default().fg(title_color())))
             .borders(Borders::ALL)
-            .border_style(Style::default().fg(ACCENT))
-            .style(Style::default().bg(BG2));
+            .border_style(Style::default().fg(accent()))
+            .style(Style::default().bg(bg2()));
         let inner = block.inner(modal_area);
         f.render_widget(block, modal_area);
         let rows = Layout::default()
@@ -1478,15 +1478,15 @@ impl EasySshScreen {
         let modal_area = centered_rect(width, height, area);
         f.render_widget(Clear, modal_area);
         let block = Block::default()
-            .title(Span::styled(" Delete Server ", Style::default().fg(TITLE)))
+            .title(Span::styled(" Delete Server ", Style::default().fg(title_color())))
             .borders(Borders::ALL)
-            .border_style(Style::default().fg(RED))
-            .style(Style::default().bg(BG2));
+            .border_style(Style::default().fg(red()))
+            .style(Style::default().bg(bg2()));
         let inner = block.inner(modal_area);
         f.render_widget(block, modal_area);
         let rows = Layout::default().direction(Direction::Vertical).margin(1).constraints([Constraint::Length(1), Constraint::Length(1), Constraint::Length(1), Constraint::Min(0)]).split(inner);
         f.render_widget(
-            Paragraph::new(Line::from(Span::styled(format!("Delete server '{}'? This removes its Host block from ~/.ssh/config.", m.alias), Style::default().fg(FG))))
+            Paragraph::new(Line::from(Span::styled(format!("Delete server '{}'? This removes its Host block from ~/.ssh/config.", m.alias), Style::default().fg(fg()))))
                 .wrap(Wrap { trim: true }),
             rows[0],
         );

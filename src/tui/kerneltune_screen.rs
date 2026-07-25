@@ -1343,14 +1343,14 @@ impl KernelTuneScreen {
 
         let tab_bar = Line::from(vec![
             tab_span("F1 Target", self.tab == Tab::Target),
-            Span::styled("  ", Style::default().bg(BG)),
+            Span::styled("  ", Style::default().bg(bg())),
             tab_span("F2 Catalog", self.tab == Tab::Catalog),
-            Span::styled("  ", Style::default().bg(BG)),
+            Span::styled("  ", Style::default().bg(bg())),
             tab_span("F3 Review", self.tab == Tab::Review),
-            Span::styled("  ", Style::default().bg(BG)),
+            Span::styled("  ", Style::default().bg(bg())),
             tab_span("F4 Revert", self.tab == Tab::Revert),
-            Span::styled("  ", Style::default().bg(BG)),
-            Span::styled("Esc back  Ctrl+C quit", Style::default().fg(FG2).bg(BG)),
+            Span::styled("  ", Style::default().bg(bg())),
+            Span::styled("Esc back  Ctrl+C quit", Style::default().fg(fg2()).bg(bg())),
         ]);
         f.render_widget(Paragraph::new(tab_bar), chunks[0]);
 
@@ -1437,10 +1437,10 @@ impl KernelTuneScreen {
             let info_inner = info_block.inner(chunks[1]);
             f.render_widget(info_block, chunks[1]);
             let lines: Vec<Line> = if tt.connecting {
-                vec![Line::from(Span::styled("Connecting…", Style::default().fg(YELLOW)))]
+                vec![Line::from(Span::styled("Connecting…", Style::default().fg(yellow())))]
             } else if let Some(info) = &self.target_info {
                 vec![
-                    Line::from(vec![Span::styled("Connected to: ", lbl()), Span::styled(self.target_label.clone(), Style::default().fg(GREEN))]),
+                    Line::from(vec![Span::styled("Connected to: ", lbl()), Span::styled(self.target_label.clone(), Style::default().fg(green()))]),
                     Line::from(vec![Span::styled("OS: ", lbl()), Span::raw(info.os_pretty.clone())]),
                     Line::from(vec![
                         Span::styled("Kernel: ", lbl()),
@@ -1479,9 +1479,9 @@ impl KernelTuneScreen {
         let profile_label = ct.profile_filter.map(|p| p.label()).unwrap_or("All");
         f.render_widget(
             Line::from(vec![
-                Span::styled(if ct.field == CatalogField::ProfileFilter { "> " } else { "  " }, Style::default().fg(ACCENT)),
+                Span::styled(if ct.field == CatalogField::ProfileFilter { "> " } else { "  " }, Style::default().fg(accent())),
                 Span::styled("Profile:  ", lbl()),
-                Span::styled(format!("‹ {profile_label} ›"), Style::default().fg(FG).add_modifier(Modifier::BOLD)),
+                Span::styled(format!("‹ {profile_label} ›"), Style::default().fg(fg()).add_modifier(Modifier::BOLD)),
                 Span::styled("   picking one filters the table and lets 'Apply Profile' bulk-stage its recommendations", lbl()),
             ]),
             filter_rows[0],
@@ -1489,9 +1489,9 @@ impl KernelTuneScreen {
         let category_label = ct.category_filter.map(|c| c.label()).unwrap_or("All");
         f.render_widget(
             Line::from(vec![
-                Span::styled(if ct.field == CatalogField::CategoryFilter { "> " } else { "  " }, Style::default().fg(ACCENT)),
+                Span::styled(if ct.field == CatalogField::CategoryFilter { "> " } else { "  " }, Style::default().fg(accent())),
                 Span::styled("Category: ", lbl()),
-                Span::styled(format!("‹ {category_label} ›"), Style::default().fg(FG).add_modifier(Modifier::BOLD)),
+                Span::styled(format!("‹ {category_label} ›"), Style::default().fg(fg()).add_modifier(Modifier::BOLD)),
             ]),
             filter_rows[1],
         );
@@ -1499,12 +1499,12 @@ impl KernelTuneScreen {
 
         let filtered = ct.filtered();
         let header = Row::new(vec![
-            Cell::from(Span::styled("Tunable", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
-            Cell::from(Span::styled("Current", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
-            Cell::from(Span::styled("Staged", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
-            Cell::from(Span::styled("Risk", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("Tunable", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("Current", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("Staged", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("Risk", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
         ])
-        .style(Style::default().bg(BG2));
+        .style(Style::default().bg(bg2()));
 
         let rows: Vec<Row> = filtered
             .iter()
@@ -1515,7 +1515,7 @@ impl KernelTuneScreen {
                 Row::new(vec![
                     Cell::from(t.title),
                     Cell::from(current.to_string()),
-                    Cell::from(Span::styled(staged, Style::default().fg(ACCENT))),
+                    Cell::from(Span::styled(staged, Style::default().fg(accent()))),
                     Cell::from(Span::styled(t.risk.label(), Style::default().fg(risk_color))),
                 ])
             })
@@ -1526,7 +1526,7 @@ impl KernelTuneScreen {
             .block(theme_block(" Catalog — Enter opens details & hints "))
             .row_highlight_style(if ct.field == CatalogField::Table { focused() } else { normal() })
             .highlight_symbol(" \u{25B6} ")
-            .style(Style::default().fg(FG).bg(BG));
+            .style(Style::default().fg(fg()).bg(bg()));
         let mut tstate = TableState::default();
         if !filtered.is_empty() {
             tstate.select(Some(ct.selected_row.min(filtered.len() - 1)));
@@ -1540,13 +1540,13 @@ impl KernelTuneScreen {
         let chunks = Layout::default().direction(Direction::Vertical).constraints([Constraint::Min(6), Constraint::Length(3), Constraint::Length(8)]).split(area);
 
         let header = Row::new(vec![
-            Cell::from(Span::styled("Tunable", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
-            Cell::from(Span::styled("Current", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
-            Cell::from(Span::styled("New", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
-            Cell::from(Span::styled("Persist?", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
-            Cell::from(Span::styled("Risk", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("Tunable", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("Current", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("New", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("Persist?", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("Risk", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
         ])
-        .style(Style::default().bg(BG2));
+        .style(Style::default().bg(bg2()));
 
         let rows: Vec<Row> = self
             .staged
@@ -1557,16 +1557,16 @@ impl KernelTuneScreen {
                 let risk = t.map(|t| t.risk).unwrap_or(Risk::Safe);
                 let is_limits = t.map(|t| matches!(t.kind, Kind::Limits { .. })).unwrap_or(false);
                 let persist_cell = if is_limits {
-                    Span::styled("always (no runtime-only form)", Style::default().fg(FG2))
+                    Span::styled("always (no runtime-only form)", Style::default().fg(fg2()))
                 } else if s.persist {
-                    Span::styled("[x] yes — survives reboot", Style::default().fg(YELLOW))
+                    Span::styled("[x] yes — survives reboot", Style::default().fg(yellow()))
                 } else {
-                    Span::styled("[ ] no — this session only", Style::default().fg(FG2))
+                    Span::styled("[ ] no — this session only", Style::default().fg(fg2()))
                 };
                 Row::new(vec![
                     Cell::from(title),
                     Cell::from(s.previous.clone()),
-                    Cell::from(Span::styled(s.value.clone(), Style::default().fg(ACCENT))),
+                    Cell::from(Span::styled(s.value.clone(), Style::default().fg(accent()))),
                     Cell::from(persist_cell),
                     Cell::from(Span::styled(risk.label(), Style::default().fg(risk_color(risk)))),
                 ])
@@ -1578,7 +1578,7 @@ impl KernelTuneScreen {
             .block(theme_block(" Staged Changes — Enter/Space toggles Persist, Delete removes a row "))
             .row_highlight_style(if self.review_tab.field == ReviewField::Table { focused() } else { normal() })
             .highlight_symbol(" \u{25B6} ")
-            .style(Style::default().fg(FG).bg(BG));
+            .style(Style::default().fg(fg()).bg(bg()));
         let mut tstate = TableState::default();
         if !self.staged.is_empty() {
             tstate.select(Some(self.review_tab.selected_row.min(self.staged.len() - 1)));
@@ -1607,13 +1607,13 @@ impl KernelTuneScreen {
         let chunks = Layout::default().direction(Direction::Vertical).constraints([Constraint::Min(6), Constraint::Length(3), Constraint::Length(8)]).split(area);
 
         let header = Row::new(vec![
-            Cell::from(Span::styled("Tunable", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
-            Cell::from(Span::styled("Previous", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
-            Cell::from(Span::styled("Applied", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
-            Cell::from(Span::styled("Persisted", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
-            Cell::from(Span::styled("When", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("Tunable", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("Previous", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("Applied", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("Persisted", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("When", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
         ])
-        .style(Style::default().bg(BG2));
+        .style(Style::default().bg(bg2()));
 
         let rows: Vec<Row> = entries
             .iter()
@@ -1638,7 +1638,7 @@ impl KernelTuneScreen {
             .block(theme_block(&title))
             .row_highlight_style(focused())
             .highlight_symbol(" \u{25B6} ")
-            .style(Style::default().fg(FG).bg(BG));
+            .style(Style::default().fg(fg()).bg(bg()));
         let mut tstate = TableState::default();
         if !entries.is_empty() {
             tstate.select(Some(self.revert_tab.selected_row.min(entries.len() - 1)));
@@ -1656,9 +1656,9 @@ impl KernelTuneScreen {
 
 fn risk_color(r: Risk) -> ratatui::style::Color {
     match r {
-        Risk::Safe => GREEN,
-        Risk::Caution => YELLOW,
-        Risk::Advanced => RED,
+        Risk::Safe => green(),
+        Risk::Caution => yellow(),
+        Risk::Advanced => red(),
     }
 }
 
@@ -1698,10 +1698,10 @@ fn draw_detail_modal(f: &mut Frame, m: &DetailModal, area: Rect) {
     let modal_area = centered_rect(width, height, area);
     f.render_widget(Clear, modal_area);
     let block = Block::default()
-        .title(Span::styled(format!(" {} ", t.title), Style::default().fg(TITLE)))
+        .title(Span::styled(format!(" {} ", t.title), Style::default().fg(title_color())))
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(ACCENT))
-        .style(Style::default().bg(BG2));
+        .border_style(Style::default().fg(accent()))
+        .style(Style::default().bg(bg2()));
     let inner = block.inner(modal_area);
     f.render_widget(block, modal_area);
 
@@ -1725,7 +1725,7 @@ fn draw_detail_modal(f: &mut Frame, m: &DetailModal, area: Rect) {
 
     f.render_widget(
         Line::from(vec![
-            Span::styled(t.key, Style::default().fg(FG2)),
+            Span::styled(t.key, Style::default().fg(fg2())),
             Span::raw("   "),
             Span::styled(t.risk.label(), Style::default().fg(risk_color(t.risk)).add_modifier(Modifier::BOLD)),
             Span::raw("   "),
@@ -1734,9 +1734,9 @@ fn draw_detail_modal(f: &mut Frame, m: &DetailModal, area: Rect) {
         rows[0],
     );
 
-    f.render_widget(Paragraph::new(t.description).wrap(Wrap { trim: true }).style(Style::default().fg(FG)), rows[2]);
+    f.render_widget(Paragraph::new(t.description).wrap(Wrap { trim: true }).style(Style::default().fg(fg())), rows[2]);
     f.render_widget(
-        Paragraph::new(vec![Line::from(Span::styled("Why: ", Style::default().fg(ACCENT).add_modifier(Modifier::BOLD))), Line::from(t.why)])
+        Paragraph::new(vec![Line::from(Span::styled("Why: ", Style::default().fg(accent()).add_modifier(Modifier::BOLD))), Line::from(t.why)])
             .wrap(Wrap { trim: true }),
         rows[4],
     );
@@ -1747,7 +1747,7 @@ fn draw_detail_modal(f: &mut Frame, m: &DetailModal, area: Rect) {
     // breaks and just vanish under `Wrap`, running two profiles' text
     // together (e.g. "...upstreams.Gaming Server: ...", no separator).
     let mut rec_lines: Vec<Line> =
-        vec![Line::from(Span::styled("Recommended by scenario:", Style::default().fg(ACCENT).add_modifier(Modifier::BOLD)))];
+        vec![Line::from(Span::styled("Recommended by scenario:", Style::default().fg(accent()).add_modifier(Modifier::BOLD)))];
     if t.profiles.is_empty() {
         rec_lines.push(Line::from("No scenario-specific recommendation in the catalog — set a value based on your own workload."));
     } else {
@@ -1793,11 +1793,11 @@ fn draw_confirm_modal(f: &mut Frame, m: &ConfirmModal, area: Rect) {
         Paragraph::new(msg)
             .block(
                 Block::default()
-                    .title(Span::styled(" Confirm Risky Changes ", Style::default().fg(YELLOW)))
+                    .title(Span::styled(" Confirm Risky Changes ", Style::default().fg(yellow())))
                     .borders(Borders::ALL)
-                    .border_style(Style::default().fg(YELLOW)),
+                    .border_style(Style::default().fg(yellow())),
             )
-            .style(Style::default().fg(FG).bg(BG2))
+            .style(Style::default().fg(fg()).bg(bg2()))
             .wrap(Wrap { trim: true }),
         modal_area,
     );

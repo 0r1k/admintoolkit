@@ -1334,12 +1334,12 @@ impl LogsScreen {
 
         let tab_bar = Line::from(vec![
             tab_span("F1 Connections", self.tab == Tab::Connections),
-            Span::styled("  ", Style::default().bg(BG)),
+            Span::styled("  ", Style::default().bg(bg())),
             tab_span("F2 Viewer", self.tab == Tab::Viewer),
-            Span::styled("  ", Style::default().bg(BG)),
-            Span::styled("Esc back  Ctrl+C quit", Style::default().fg(FG2).bg(BG)),
+            Span::styled("  ", Style::default().bg(bg())),
+            Span::styled("Esc back  Ctrl+C quit", Style::default().fg(fg2()).bg(bg())),
         ]);
-        f.render_widget(Paragraph::new(tab_bar).style(Style::default().bg(BG)), chunks[0]);
+        f.render_widget(Paragraph::new(tab_bar).style(Style::default().bg(bg())), chunks[0]);
 
         match self.tab {
             Tab::Connections => self.draw_connections(f, chunks[1]),
@@ -1356,11 +1356,11 @@ impl LogsScreen {
         let chunks = Layout::default().direction(Direction::Vertical).constraints([Constraint::Min(0), Constraint::Length(22), Constraint::Length(6)]).split(area);
 
         let header = Row::new(vec![
-            Cell::from(Span::styled("Label", Style::default().fg(TITLE))),
-            Cell::from(Span::styled("Host:Port", Style::default().fg(TITLE))),
-            Cell::from(Span::styled("SSH User", Style::default().fg(TITLE))),
+            Cell::from(Span::styled("Label", Style::default().fg(title_color()))),
+            Cell::from(Span::styled("Host:Port", Style::default().fg(title_color()))),
+            Cell::from(Span::styled("SSH User", Style::default().fg(title_color()))),
         ])
-        .style(Style::default().bg(BG2));
+        .style(Style::default().bg(bg2()));
         let mut rows: Vec<Row> = self
             .cfg
             .connections
@@ -1376,9 +1376,9 @@ impl LogsScreen {
         for s in &extras {
             let port = if s.port == 0 { "22".to_string() } else { s.port.to_string() };
             rows.push(Row::new(vec![
-                Cell::from(Span::styled(s.alias.clone(), Style::default().fg(FG2))),
-                Cell::from(Span::styled(format!("{}:{port}", s.effective_host()), Style::default().fg(FG2))),
-                Cell::from(Span::styled(s.user.clone(), Style::default().fg(FG2))),
+                Cell::from(Span::styled(s.alias.clone(), Style::default().fg(fg2()))),
+                Cell::from(Span::styled(format!("{}:{port}", s.effective_host()), Style::default().fg(fg2()))),
+                Cell::from(Span::styled(s.user.clone(), Style::default().fg(fg2()))),
             ]));
         }
         let title = if extras.is_empty() {
@@ -1391,7 +1391,7 @@ impl LogsScreen {
             .block(theme_block(&title))
             .row_highlight_style(if ct.field == ConnField::Table { focused() } else { normal() })
             .highlight_symbol(" \u{25B6} ")
-            .style(Style::default().fg(FG).bg(BG));
+            .style(Style::default().fg(fg()).bg(bg()));
         let total = self.cfg.connections.len() + extras.len();
         let mut tstate = TableState::default();
         if total > 0 {
@@ -1616,11 +1616,11 @@ impl LogsScreen {
 fn colorize_line(line: &str) -> Line<'static> {
     let lower = line.to_lowercase();
     let style = if lower.contains("emerg") || lower.contains("alert") || lower.contains("crit") || lower.contains("fatal") || lower.contains(" error") || lower.contains("err:") || lower.contains("[error]") {
-        Style::default().fg(RED)
+        Style::default().fg(red())
     } else if lower.contains("warn") {
-        Style::default().fg(YELLOW)
+        Style::default().fg(yellow())
     } else {
-        Style::default().fg(FG)
+        Style::default().fg(fg())
     };
     Line::from(Span::styled(line.to_string(), style))
 }
@@ -1631,10 +1631,10 @@ fn draw_browser(f: &mut Frame, browser: &RemoteBrowser, area: Rect) {
     let modal_area = centered_rect(width, height, area);
     f.render_widget(Clear, modal_area);
     let block = Block::default()
-        .title(Span::styled(format!(" Browse — {} ", browser.path), Style::default().fg(TITLE)))
+        .title(Span::styled(format!(" Browse — {} ", browser.path), Style::default().fg(title_color())))
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(ACCENT))
-        .style(Style::default().bg(BG2));
+        .border_style(Style::default().fg(accent()))
+        .style(Style::default().bg(bg2()));
     let inner = block.inner(modal_area);
     f.render_widget(block, modal_area);
 
@@ -1643,18 +1643,18 @@ fn draw_browser(f: &mut Frame, browser: &RemoteBrowser, area: Rect) {
     if browser.loading {
         f.render_widget(Paragraph::new(Line::from(Span::styled("Loading\u{2026}", lbl()))), rows[0]);
     } else if let Some(err) = &browser.error {
-        f.render_widget(Paragraph::new(Line::from(Span::styled(format!("can't list this directory: {err}"), Style::default().fg(RED)))), rows[0]);
+        f.render_widget(Paragraph::new(Line::from(Span::styled(format!("can't list this directory: {err}"), Style::default().fg(red())))), rows[0]);
     } else {
         let mut items: Vec<ListItem> = Vec::new();
         if browser.path != "/" {
-            items.push(ListItem::new(Span::styled("../", Style::default().fg(ACCENT))));
+            items.push(ListItem::new(Span::styled("../", Style::default().fg(accent()))));
         }
         items.extend(browser.entries.iter().filter(|e| e.name != "..").map(|e| {
             let label = if e.is_dir { format!("{}/", e.name) } else { e.name.clone() };
-            let style = if e.is_dir { Style::default().fg(ACCENT) } else { Style::default().fg(FG) };
+            let style = if e.is_dir { Style::default().fg(accent()) } else { Style::default().fg(fg()) };
             ListItem::new(Span::styled(label, style))
         }));
-        let list = List::new(items).highlight_style(focused()).style(Style::default().fg(FG).bg(BG2));
+        let list = List::new(items).highlight_style(focused()).style(Style::default().fg(fg()).bg(bg2()));
         let mut state = ListState::default();
         let entry_count = browser.entries.len() + if browser.path != "/" { 1 } else { 0 };
         if entry_count > 0 {
@@ -1699,9 +1699,9 @@ fn render_dropdown(f: &mut Frame, items: &[String], selected_idx: usize, anchor:
     }
     let list_items: Vec<ListItem> = items.iter().map(|s| ListItem::new(s.clone())).collect();
     let list = List::new(list_items)
-        .block(Block::default().borders(Borders::ALL).border_style(Style::default().fg(BORDER)))
-        .highlight_style(Style::default().fg(BG).bg(FG))
-        .style(Style::default().fg(FG).bg(BG2));
+        .block(Block::default().borders(Borders::ALL).border_style(Style::default().fg(border())))
+        .highlight_style(Style::default().fg(bg()).bg(fg()))
+        .style(Style::default().fg(fg()).bg(bg2()));
     let x = anchor.x + x_off;
     let y = anchor.y + 1;
     let height = (items.len() as u16 + 2).min(10);

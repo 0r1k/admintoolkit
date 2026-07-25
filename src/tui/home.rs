@@ -258,13 +258,13 @@ pub fn draw(f: &mut Frame, state: &HomeState, area: Rect) {
     let banner = vec![
         Line::from(Span::styled(
             "atk — Admin Toolkit",
-            Style::default().fg(TITLE).add_modifier(Modifier::BOLD),
+            Style::default().fg(title_color()).add_modifier(Modifier::BOLD),
         )),
         Line::from(Span::styled(
             "A sysadmin's Swiss Army knife: SSH servers, SSH users, DNS, MySQL, PostgreSQL, ClickHouse, logs, kernel tuning — one TUI",
-            Style::default().fg(FG2),
+            Style::default().fg(fg2()),
         )),
-        Line::from(Span::styled("or1k.net", Style::default().fg(BORDER))),
+        Line::from(Span::styled(format!("or1k.net  \u{2022}  theme: {}", super::theme::current().label()), Style::default().fg(border()))),
     ];
     f.render_widget(
         Paragraph::new(banner).alignment(Alignment::Center),
@@ -279,11 +279,11 @@ pub fn draw(f: &mut Frame, state: &HomeState, area: Rect) {
             let item = state.item(*screen);
             let lines = vec![
                 Line::from(vec![
-                    Span::styled(format!("  {}. ", i + 1), Style::default().fg(FG2)),
-                    Span::styled(item.title, Style::default().fg(FG).add_modifier(Modifier::BOLD)),
-                    Span::styled(format!("  ({})", item.bin), Style::default().fg(FG2)),
+                    Span::styled(format!("  {}. ", i + 1), Style::default().fg(fg2())),
+                    Span::styled(item.title, Style::default().fg(fg()).add_modifier(Modifier::BOLD)),
+                    Span::styled(format!("  ({})", item.bin), Style::default().fg(fg2())),
                 ]),
-                Line::from(Span::styled(format!("     {}", item.desc), Style::default().fg(FG2))),
+                Line::from(Span::styled(format!("     {}", item.desc), Style::default().fg(fg2()))),
                 Line::from(""),
             ];
             ListItem::new(lines)
@@ -293,12 +293,12 @@ pub fn draw(f: &mut Frame, state: &HomeState, area: Rect) {
     let list = List::new(items)
         .block(
             Block::default()
-                .title(Span::styled(" Tools ", Style::default().fg(TITLE)))
+                .title(Span::styled(" Tools ", Style::default().fg(title_color())))
                 .borders(Borders::ALL)
-                .border_style(Style::default().fg(BORDER)),
+                .border_style(Style::default().fg(border())),
         )
-        .style(Style::default().bg(BG))
-        .highlight_style(Style::default().bg(BG3))
+        .style(Style::default().bg(bg()))
+        .highlight_style(Style::default().bg(bg3()))
         .highlight_symbol(" \u{25B6} ");
 
     let mut lstate = ListState::default();
@@ -307,7 +307,7 @@ pub fn draw(f: &mut Frame, state: &HomeState, area: Rect) {
 
     f.render_widget(
         Paragraph::new(Line::from(Span::styled(
-            "\u{2191}\u{2193}/1-9 select  Enter open  Shift+K/J move up/down  F12 mouse  Ctrl+C quit",
+            "\u{2191}\u{2193}/1-9 select  Enter open  Shift+K/J move up/down  F11 theme  F12 mouse  Ctrl+C quit",
             lbl(),
         )))
         .alignment(Alignment::Center),

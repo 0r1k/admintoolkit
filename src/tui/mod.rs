@@ -14,6 +14,7 @@ mod mysql_screen;
 mod postgresql_screen;
 mod priv_picker;
 mod sshuser_screen;
+mod theme;
 
 use std::{io, time::{Duration, Instant}};
 
@@ -24,7 +25,7 @@ use crossterm::{
 };
 use ratatui::{backend::CrosstermBackend, layout::Rect, style::Style, widgets::Block, Terminal};
 
-use widgets::BG;
+use widgets::bg;
 
 /// Enables only what this app actually handles: click press/release
 /// (`1000`) and SGR-encoded coordinates for terminals wider than 223
@@ -125,6 +126,7 @@ const CLICK_DEBOUNCE: Duration = Duration::from_millis(150);
 
 impl App {
     fn new() -> Self {
+        theme::load();
         Self {
             screen: Screen::Home,
             home: home::HomeState::new(),
@@ -347,6 +349,14 @@ impl App {
             return;
         }
 
+        // Global, works from any screen: cycles the color theme (see
+        // `theme.rs`) and persists the choice immediately. Shift+F11 goes
+        // back a step, for whoever overshoots the one they wanted.
+        if key.code == crossterm::event::KeyCode::F(11) {
+            theme::cycle(if key.modifiers.contains(KeyModifiers::SHIFT) { -1 } else { 1 });
+            return;
+        }
+
         match self.screen {
             Screen::Home => {
                 if key.code == crossterm::event::KeyCode::Esc || key.code == crossterm::event::KeyCode::Char('q') {
@@ -416,7 +426,7 @@ impl App {
 
     fn draw(&self, f: &mut ratatui::Frame) {
         let area = f.area();
-        f.render_widget(Block::default().style(Style::default().bg(BG)), area);
+        f.render_widget(Block::default().style(Style::default().bg(bg())), area);
         match self.screen {
             Screen::Home => home::draw(f, &self.home, area),
             Screen::EasySsh => {

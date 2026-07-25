@@ -56,6 +56,7 @@ but each keeps its own file inside it, so the tools stay independent:
 admintoolkit/
 ├── easyssh.json        SSH Server Manager: tags/pin/last-seen/SSH-count metadata (servers themselves live in ~/.ssh/config)
 ├── menu_order.json     Home menu: your custom tool order, if you've moved anything with K/J
+├── theme.json          Your chosen color theme (F11/Shift+F11 to cycle)
 ├── ssh_users.json     SSH User Manager: profiles + default SSH settings
 ├── clickhouse.json    ClickHouse Manager: connection profiles (mode, host/port/user or SSH target, encrypted passwords)
 ├── godaddy.json        GoDaddy Manager: accounts (label, API key, encrypted secret)
@@ -260,6 +261,7 @@ Every screen follows the same pattern:
 | `Ctrl+C` | Quit immediately from anywhere |
 | `Ctrl+Y` | Copy the History panel to the clipboard |
 | `Ctrl+↑` / `Ctrl+↓` | Scroll the History panel |
+| `F11` / `Shift+F11` | Cycle the color theme forward / backward (see Themes below) |
 | `F12` | Toggle mouse capture on/off (see Mouse support below) |
 
 The SSH Server Manager's server list has its own richer keymap (`F1`
@@ -293,6 +295,33 @@ Capture only requests click and scroll reporting, not continuous motion
 tracking — some terminals otherwise flood the input stream with a mouse
 event per pixel of movement, which queues up ahead of keystrokes and
 makes keyboard input feel broken under mixed mouse+keyboard use.
+
+## Themes
+
+`F11` cycles the color theme (`Shift+F11` goes back); the current one is
+shown on the home screen. 16 in total — atk's original hand-picked
+palette (`Classic`, the default, so a fresh install looks exactly like it
+always has) plus 15 ported from
+[ratatui-themes](https://github.com/ricardodantas/ratatui-themes)
+(MIT-licensed; colors copied in directly rather than taken as a
+dependency, since that crate targets ratatui 0.30 and atk is on 0.29):
+Dracula, One Dark Pro, Nord, Catppuccin Mocha, Catppuccin Latte, Gruvbox
+Dark, Gruvbox Light, Tokyo Night, Solarized Dark, Solarized Light, Monokai
+Pro, Rosé Pine, Kanagawa, Everforest, and Cyberpunk.
+
+Each of those ships a 10-color semantic palette (`accent`, `bg`, `fg`,
+`muted`, `selection`, `error`, `warning`, `success`, `info`, ...) that
+predates and doesn't map 1:1 onto atk's own 11-color shape (three
+background tiers, two foreground tiers, a border tone, a title tone, an
+accent, and three semantic colors) — every screen was written against
+exactly those 11, long before a theme system existed. `src/tui/theme.rs`
+derives one from the other with the same fixed rule for every theme
+(background tiers step from `bg` *toward* `selection`, never toward `fg`,
+so it works the same direction on light and dark themes alike) rather
+than hand-tuning each theme individually.
+
+The choice is saved to `theme.json` the moment you cycle it — no separate
+save step — and reloaded on the next launch.
 
 ## Why one binary
 

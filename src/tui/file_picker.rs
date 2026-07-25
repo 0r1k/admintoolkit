@@ -154,10 +154,10 @@ pub fn draw(f: &mut Frame, picker: &FilePicker, area: Rect) {
 
     f.render_widget(Clear, modal_area);
     let block = Block::default()
-        .title(Span::styled(format!(" Select File — {} ", picker.cwd.display()), Style::default().fg(TITLE)))
+        .title(Span::styled(format!(" Select File — {} ", picker.cwd.display()), Style::default().fg(title_color())))
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(ACCENT))
-        .style(Style::default().bg(BG2));
+        .border_style(Style::default().fg(accent()))
+        .style(Style::default().bg(bg2()));
     let inner = block.inner(modal_area);
     f.render_widget(block, modal_area);
 
@@ -168,18 +168,18 @@ pub fn draw(f: &mut Frame, picker: &FilePicker, area: Rect) {
         .split(inner);
 
     if let Some(err) = &picker.error {
-        f.render_widget(Paragraph::new(Line::from(Span::styled(format!("can't read this directory: {err}"), Style::default().fg(RED)))), rows[0]);
+        f.render_widget(Paragraph::new(Line::from(Span::styled(format!("can't read this directory: {err}"), Style::default().fg(red())))), rows[0]);
     } else {
         let items: Vec<ListItem> = picker
             .entries
             .iter()
             .map(|e| {
                 let label = if e.is_dir { format!("{}/", e.name) } else { e.name.clone() };
-                let style = if e.is_dir { Style::default().fg(ACCENT).bold() } else { Style::default().fg(FG) };
+                let style = if e.is_dir { Style::default().fg(accent()).bold() } else { Style::default().fg(fg()) };
                 ListItem::new(Span::styled(label, style))
             })
             .collect();
-        let list = List::new(items).highlight_style(focused()).style(Style::default().fg(FG).bg(BG2));
+        let list = List::new(items).highlight_style(focused()).style(Style::default().fg(fg()).bg(bg2()));
         let mut state = ListState::default();
         if !picker.entries.is_empty() {
             state.select(Some(picker.selected.min(picker.entries.len() - 1)));

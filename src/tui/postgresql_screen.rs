@@ -1377,12 +1377,12 @@ impl PostgresqlScreen {
 
         let tab_bar = Line::from(vec![
             tab_span("F1 Connections", self.tab == Tab::Connections),
-            Span::styled("  ", Style::default().bg(BG)),
+            Span::styled("  ", Style::default().bg(bg())),
             tab_span("F2 Users", self.tab == Tab::Users),
-            Span::styled("  ", Style::default().bg(BG)),
-            Span::styled("Esc back  Ctrl+C quit", Style::default().fg(FG2).bg(BG)),
+            Span::styled("  ", Style::default().bg(bg())),
+            Span::styled("Esc back  Ctrl+C quit", Style::default().fg(fg2()).bg(bg())),
         ]);
-        f.render_widget(Paragraph::new(tab_bar).style(Style::default().bg(BG)), chunks[0]);
+        f.render_widget(Paragraph::new(tab_bar).style(Style::default().bg(bg())), chunks[0]);
 
         match self.tab {
             Tab::Connections => self.draw_connections(f, chunks[1]),
@@ -1416,12 +1416,12 @@ impl PostgresqlScreen {
             .split(area);
 
         let header = Row::new(vec![
-            Cell::from(Span::styled("Label", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
-            Cell::from(Span::styled("Host:Port", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
-            Cell::from(Span::styled("DB User", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
-            Cell::from(Span::styled("Tunnel", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("Label", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("Host:Port", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("DB User", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("Tunnel", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
         ])
-        .style(Style::default().bg(BG2));
+        .style(Style::default().bg(bg2()));
 
         let rows: Vec<Row> = self
             .cfg
@@ -1442,7 +1442,7 @@ impl PostgresqlScreen {
             .block(theme_block(" Connections "))
             .row_highlight_style(if ct.field == ConnField::Table { focused() } else { normal() })
             .highlight_symbol(" \u{25B6} ")
-            .style(Style::default().fg(FG).bg(BG));
+            .style(Style::default().fg(fg()).bg(bg()));
 
         let mut tstate = TableState::default();
         if !self.cfg.connections.is_empty() {
@@ -1488,7 +1488,7 @@ impl PostgresqlScreen {
         f.render_widget(
             Paragraph::new(Line::from(Span::styled(
                 "needs CREATEROLE (or superuser) privileges — e.g. the postgres superuser, or a dedicated admin role",
-                Style::default().fg(YELLOW),
+                Style::default().fg(yellow()),
             ))),
             rows2[7],
         );
@@ -1607,13 +1607,13 @@ impl PostgresqlScreen {
         );
 
         let header = Row::new(vec![
-            Cell::from(Span::styled("Role", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
-            Cell::from(Span::styled("Super", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
-            Cell::from(Span::styled("Login", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
-            Cell::from(Span::styled("CreateDB", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
-            Cell::from(Span::styled("CreateRole", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("Role", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("Super", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("Login", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("CreateDB", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("CreateRole", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
         ])
-        .style(Style::default().bg(BG2));
+        .style(Style::default().bg(bg2()));
         let table_rows: Vec<Row> = ut
             .rows
             .iter()
@@ -1642,7 +1642,7 @@ impl PostgresqlScreen {
             .block(theme_block(&users_title))
             .row_highlight_style(if ut.field == UsersField::Table { focused() } else { normal() })
             .highlight_symbol(" \u{25B6} ")
-            .style(Style::default().fg(FG).bg(BG));
+            .style(Style::default().fg(fg()).bg(bg()));
         let mut tstate = TableState::default();
         if !ut.rows.is_empty() {
             tstate.select(Some(ut.selected_row.min(ut.rows.len() - 1)));
@@ -1679,10 +1679,10 @@ impl PostgresqlScreen {
         let modal_area = centered_rect(width, height, area);
         f.render_widget(Clear, modal_area);
         let block = Block::default()
-            .title(Span::styled(" Add PostgreSQL User ", Style::default().fg(TITLE)))
+            .title(Span::styled(" Add PostgreSQL User ", Style::default().fg(title_color())))
             .borders(Borders::ALL)
-            .border_style(Style::default().fg(ACCENT))
-            .style(Style::default().bg(BG2));
+            .border_style(Style::default().fg(accent()))
+            .style(Style::default().bg(bg2()));
         let inner = block.inner(modal_area);
         f.render_widget(block, modal_area);
 
@@ -1762,10 +1762,10 @@ impl PostgresqlScreen {
         let modal_area = centered_rect(width, height, area);
         f.render_widget(Clear, modal_area);
         let block = Block::default()
-            .title(Span::styled(format!(" Role \"{}\" ", m.user), Style::default().fg(TITLE)))
+            .title(Span::styled(format!(" Role \"{}\" ", m.user), Style::default().fg(title_color())))
             .borders(Borders::ALL)
-            .border_style(Style::default().fg(ACCENT))
-            .style(Style::default().bg(BG2));
+            .border_style(Style::default().fg(accent()))
+            .style(Style::default().bg(bg2()));
         let inner = block.inner(modal_area);
         f.render_widget(block, modal_area);
 
@@ -1825,9 +1825,9 @@ fn render_dropdown(f: &mut Frame, items: &[String], selected_idx: usize, anchor:
     }
     let list_items: Vec<ListItem> = items.iter().map(|s| ListItem::new(s.clone())).collect();
     let list = List::new(list_items)
-        .block(Block::default().borders(Borders::ALL).border_style(Style::default().fg(BORDER)))
-        .highlight_style(Style::default().fg(BG).bg(FG))
-        .style(Style::default().fg(FG).bg(BG2));
+        .block(Block::default().borders(Borders::ALL).border_style(Style::default().fg(border())))
+        .highlight_style(Style::default().fg(bg()).bg(fg()))
+        .style(Style::default().fg(fg()).bg(bg2()));
     let x = anchor.x + x_off;
     let y = anchor.y + 1;
     let height = (items.len() as u16 + 2).min(10);

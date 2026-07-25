@@ -12,17 +12,46 @@ use ratatui::{
 };
 
 // ── Palette ──────────────────────────────────────────────────────────────
-pub const BG: Color = Color::Rgb(15, 23, 42);
-pub const BG2: Color = Color::Rgb(30, 41, 59);
-pub const BG3: Color = Color::Rgb(51, 65, 85);
-pub const BORDER: Color = Color::Rgb(100, 116, 139);
-pub const TITLE: Color = Color::Rgb(125, 211, 252);
-pub const FG: Color = Color::Rgb(226, 232, 240);
-pub const FG2: Color = Color::Rgb(148, 163, 184);
-pub const ACCENT: Color = Color::Rgb(56, 189, 248);
-pub const GREEN: Color = Color::Rgb(74, 222, 128);
-pub const RED: Color = Color::Rgb(248, 113, 113);
-pub const YELLOW: Color = Color::Rgb(250, 204, 21);
+// Each of these reads the current theme (see `theme.rs`) fresh every call,
+// rather than being fixed constants — that's what makes `F11`-cycling the
+// theme repaint every screen immediately. The default theme, `Classic`, is
+// atk's original hand-picked palette verbatim, so a fresh install (or a
+// missing/corrupt theme.json) looks exactly like it always did.
+use super::theme;
+
+pub fn bg() -> Color {
+    theme::palette().bg
+}
+pub fn bg2() -> Color {
+    theme::palette().bg2
+}
+pub fn bg3() -> Color {
+    theme::palette().bg3
+}
+pub fn border() -> Color {
+    theme::palette().border
+}
+pub fn title_color() -> Color {
+    theme::palette().title
+}
+pub fn fg() -> Color {
+    theme::palette().fg
+}
+pub fn fg2() -> Color {
+    theme::palette().fg2
+}
+pub fn accent() -> Color {
+    theme::palette().accent
+}
+pub fn green() -> Color {
+    theme::palette().green
+}
+pub fn red() -> Color {
+    theme::palette().red
+}
+pub fn yellow() -> Color {
+    theme::palette().yellow
+}
 
 // ── Input ────────────────────────────────────────────────────────────────
 #[derive(Default, Clone)]
@@ -106,32 +135,32 @@ impl Input {
 // ── Widget helpers ──────────────────────────────────────────────────────
 pub fn theme_block(title: &str) -> Block<'_> {
     Block::default()
-        .title(Span::styled(title, Style::default().fg(TITLE)))
+        .title(Span::styled(title, Style::default().fg(title_color())))
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(BORDER))
-        .style(Style::default().bg(BG))
+        .border_style(Style::default().fg(border()))
+        .style(Style::default().bg(bg()))
 }
 
 /// Label text style. Deliberately has no background of its own: labels sit
-/// directly on whatever container is behind them (BG on a full-screen tab,
-/// BG2 inside a modal) and must blend into it, not stand out as a box —
+/// directly on whatever container is behind them (bg() on a full-screen tab,
+/// bg2() inside a modal) and must blend into it, not stand out as a box —
 /// only input fields (`normal`/`focused`) should look boxed.
 pub fn lbl() -> Style {
-    Style::default().fg(FG2)
+    Style::default().fg(fg2())
 }
 
 /// Focused input field: a solid highlight block, unmistakable regardless of
 /// the surrounding container's background — matches the focused-button look
 /// so "focused control" reads the same everywhere in the app.
 pub fn focused() -> Style {
-    Style::default().fg(BG).bg(ACCENT)
+    Style::default().fg(bg()).bg(accent())
 }
 
-/// Unfocused input field. Uses BG3 rather than BG2 so the field's box stays
+/// Unfocused input field. Uses bg3() rather than bg2() so the field's box stays
 /// visible against *any* container background, including modals (which are
-/// themselves BG2) — otherwise an empty unfocused field is invisible.
+/// themselves bg2()) — otherwise an empty unfocused field is invisible.
 pub fn normal() -> Style {
-    Style::default().fg(FG).bg(BG3)
+    Style::default().fg(fg()).bg(bg3())
 }
 
 /// Render a fixed-width input field that scrolls to keep the cursor visible.
@@ -180,12 +209,12 @@ pub fn btn_span(label: &str, focused: bool) -> Span<'static> {
         Span::styled(
             text,
             Style::default()
-                .fg(BG)
-                .bg(ACCENT)
+                .fg(bg())
+                .bg(accent())
                 .add_modifier(Modifier::BOLD),
         )
     } else {
-        Span::styled(text, Style::default().fg(FG2).bg(BG3))
+        Span::styled(text, Style::default().fg(fg2()).bg(bg3()))
     }
 }
 
@@ -194,12 +223,12 @@ pub fn tab_span(label: &str, active: bool) -> Span<'static> {
         Span::styled(
             label.to_string(),
             Style::default()
-                .fg(ACCENT)
-                .bg(BG)
+                .fg(accent())
+                .bg(bg())
                 .add_modifier(Modifier::BOLD | Modifier::UNDERLINED),
         )
     } else {
-        Span::styled(label.to_string(), Style::default().fg(FG2).bg(BG))
+        Span::styled(label.to_string(), Style::default().fg(fg2()).bg(bg()))
     }
 }
 
@@ -225,11 +254,11 @@ pub fn draw_modal(f: &mut Frame, title: &str, msg: &str, area: Rect) {
         Paragraph::new(format!("{msg}\n\nEnter / Esc to close"))
             .block(
                 Block::default()
-                    .title(Span::styled(format!(" {title} "), Style::default().fg(TITLE)))
+                    .title(Span::styled(format!(" {title} "), Style::default().fg(title_color())))
                     .borders(Borders::ALL)
-                    .border_style(Style::default().fg(ACCENT)),
+                    .border_style(Style::default().fg(accent())),
             )
-            .style(Style::default().fg(FG).bg(BG2))
+            .style(Style::default().fg(fg()).bg(bg2()))
             .wrap(Wrap { trim: true }),
         modal_area,
     );
@@ -244,7 +273,7 @@ pub fn draw_history(f: &mut Frame, history: &[(bool, String)], area: Rect, scrol
     let block = theme_block(" History (Ctrl+\u{2191}/\u{2193} scroll, Ctrl+Y copy) ");
     let inner = block.inner(area);
     f.render_widget(block, area);
-    let lines: Vec<Line> = history.iter().map(|(ok, line)| Line::from(Span::styled(line.as_str(), Style::default().fg(if *ok { GREEN } else { RED })))).collect();
+    let lines: Vec<Line> = history.iter().map(|(ok, line)| Line::from(Span::styled(line.as_str(), Style::default().fg(if *ok { green() } else { red() })))).collect();
     let total = lines.len() as u16;
     let visible = inner.height;
     let max_offset = total.saturating_sub(visible);

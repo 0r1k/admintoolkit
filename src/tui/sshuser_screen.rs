@@ -813,14 +813,14 @@ impl SshUserScreen {
 
         let tab_bar = Line::from(vec![
             tab_span("F1 User", self.tab == Tab::User),
-            Span::styled("  ", Style::default().bg(BG)),
+            Span::styled("  ", Style::default().bg(bg())),
             tab_span("F2 Profiles", self.tab == Tab::Profiles),
-            Span::styled("  ", Style::default().bg(BG)),
+            Span::styled("  ", Style::default().bg(bg())),
             tab_span("F3 Settings", self.tab == Tab::Settings),
-            Span::styled("  ", Style::default().bg(BG)),
-            Span::styled("Esc back  Ctrl+C quit", Style::default().fg(FG2).bg(BG)),
+            Span::styled("  ", Style::default().bg(bg())),
+            Span::styled("Esc back  Ctrl+C quit", Style::default().fg(fg2()).bg(bg())),
         ]);
-        f.render_widget(Paragraph::new(tab_bar).style(Style::default().bg(BG)), chunks[0]);
+        f.render_widget(Paragraph::new(tab_bar).style(Style::default().bg(bg())), chunks[0]);
 
         match self.tab {
             Tab::User => self.draw_user(f, chunks[1]),
@@ -907,7 +907,7 @@ impl SshUserScreen {
             .map(|(ok, line)| {
                 Line::from(Span::styled(
                     line.as_str(),
-                    Style::default().fg(if *ok { GREEN } else { RED }),
+                    Style::default().fg(if *ok { green() } else { red() }),
                 ))
             })
             .collect();
@@ -931,10 +931,10 @@ impl SshUserScreen {
                     .block(
                         ratatui::widgets::Block::default()
                             .borders(ratatui::widgets::Borders::ALL)
-                            .border_style(Style::default().fg(BORDER)),
+                            .border_style(Style::default().fg(border())),
                     )
-                    .highlight_style(Style::default().fg(BG).bg(FG))
-                    .style(Style::default().fg(FG).bg(BG2));
+                    .highlight_style(Style::default().fg(bg()).bg(fg()))
+                    .style(Style::default().fg(fg()).bg(bg2()));
 
                 let x = form_rows[4].x + 10;
                 let y = form_rows[4].y + 1;
@@ -965,14 +965,14 @@ impl SshUserScreen {
         let header = Row::new(vec![
             ratatui::widgets::Cell::from(Span::styled(
                 "Username",
-                Style::default().fg(TITLE).add_modifier(ratatui::style::Modifier::BOLD),
+                Style::default().fg(title_color()).add_modifier(ratatui::style::Modifier::BOLD),
             )),
             ratatui::widgets::Cell::from(Span::styled(
                 "SSH Key (truncated)",
-                Style::default().fg(TITLE).add_modifier(ratatui::style::Modifier::BOLD),
+                Style::default().fg(title_color()).add_modifier(ratatui::style::Modifier::BOLD),
             )),
         ])
-        .style(Style::default().bg(BG2));
+        .style(Style::default().bg(bg2()));
 
         let rows: Vec<Row> = self
             .cfg
@@ -994,13 +994,13 @@ impl SshUserScreen {
         let table = Table::new(rows, [Constraint::Length(20), Constraint::Min(0)])
             .header(header)
             .block(theme_block(" Profiles "))
-            .style(Style::default().fg(FG).bg(BG));
+            .style(Style::default().fg(fg()).bg(bg()));
         f.render_widget(table, chunks[0]);
 
         let form_block = ratatui::widgets::Block::default()
             .borders(ratatui::widgets::Borders::TOP)
-            .border_style(Style::default().fg(BORDER))
-            .style(Style::default().bg(BG));
+            .border_style(Style::default().fg(border()))
+            .style(Style::default().bg(bg()));
         let form_inner = form_block.inner(chunks[1]);
         f.render_widget(form_block, chunks[1]);
 

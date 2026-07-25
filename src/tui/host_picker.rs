@@ -132,10 +132,10 @@ pub fn draw(f: &mut Frame, picker: &HostPicker, area: Rect) {
     let modal_area = centered_rect(width, height, area);
     f.render_widget(Clear, modal_area);
     let block = Block::default()
-        .title(Span::styled(" Pick a Known Host (from SSH Server Manager) ", Style::default().fg(TITLE)))
+        .title(Span::styled(" Pick a Known Host (from SSH Server Manager) ", Style::default().fg(title_color())))
         .borders(Borders::ALL)
-        .border_style(Style::default().fg(ACCENT))
-        .style(Style::default().bg(BG2));
+        .border_style(Style::default().fg(accent()))
+        .style(Style::default().bg(bg2()));
     let inner = block.inner(modal_area);
     f.render_widget(block, modal_area);
 
@@ -148,7 +148,7 @@ pub fn draw(f: &mut Frame, picker: &HostPicker, area: Rect) {
     f.render_widget(Paragraph::new(Line::from(vec![Span::styled("Search: ", lbl()), input_span(&picker.query, true, false, fw)])), rows[0]);
 
     if let Some(err) = &picker.error {
-        f.render_widget(Paragraph::new(Line::from(Span::styled(format!("couldn't read ~/.ssh/config: {err}"), Style::default().fg(RED)))), rows[2]);
+        f.render_widget(Paragraph::new(Line::from(Span::styled(format!("couldn't read ~/.ssh/config: {err}"), Style::default().fg(red())))), rows[2]);
     } else {
         let filtered = picker.filtered();
         if filtered.is_empty() {
@@ -165,13 +165,13 @@ pub fn draw(f: &mut Frame, picker: &HostPicker, area: Rect) {
                     let user_part = if s.user.is_empty() { String::new() } else { format!("{}@", s.user) };
                     let tags_part = if s.tags.is_empty() { String::new() } else { format!("  [{}]", s.tags.join(", ")) };
                     ListItem::new(Line::from(vec![
-                        Span::styled(format!("{:<22}", s.alias), Style::default().fg(FG).add_modifier(Modifier::BOLD)),
-                        Span::styled(format!(" {user_part}{}", s.effective_host()), Style::default().fg(FG2)),
-                        Span::styled(tags_part, Style::default().fg(ACCENT)),
+                        Span::styled(format!("{:<22}", s.alias), Style::default().fg(fg()).add_modifier(Modifier::BOLD)),
+                        Span::styled(format!(" {user_part}{}", s.effective_host()), Style::default().fg(fg2())),
+                        Span::styled(tags_part, Style::default().fg(accent())),
                     ]))
                 })
                 .collect();
-            let list = List::new(items).highlight_style(focused()).style(Style::default().fg(FG).bg(BG2));
+            let list = List::new(items).highlight_style(focused()).style(Style::default().fg(fg()).bg(bg2()));
             let mut state = ListState::default();
             state.select(Some(picker.selected.min(filtered.len() - 1)));
             f.render_stateful_widget(list, rows[2], &mut state);

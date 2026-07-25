@@ -2074,12 +2074,12 @@ impl CloudflareScreen {
 
         let tab_bar = Line::from(vec![
             tab_span("F1 Accounts", self.tab == Tab::Accounts),
-            Span::styled("  ", Style::default().bg(BG)),
+            Span::styled("  ", Style::default().bg(bg())),
             tab_span("F2 Records", self.tab == Tab::Records),
-            Span::styled("  ", Style::default().bg(BG)),
-            Span::styled("Esc back  Ctrl+C quit", Style::default().fg(FG2).bg(BG)),
+            Span::styled("  ", Style::default().bg(bg())),
+            Span::styled("Esc back  Ctrl+C quit", Style::default().fg(fg2()).bg(bg())),
         ]);
-        f.render_widget(Paragraph::new(tab_bar).style(Style::default().bg(BG)), chunks[0]);
+        f.render_widget(Paragraph::new(tab_bar).style(Style::default().bg(bg())), chunks[0]);
 
         match self.tab {
             Tab::Accounts => self.draw_accounts(f, chunks[1]),
@@ -2107,10 +2107,10 @@ impl CloudflareScreen {
             .split(area);
 
         let header = Row::new(vec![
-            Cell::from(Span::styled("Label", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
-            Cell::from(Span::styled("API Token", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("Label", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("API Token", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
         ])
-        .style(Style::default().bg(BG2));
+        .style(Style::default().bg(bg2()));
 
         let rows: Vec<Row> = self
             .cfg
@@ -2124,7 +2124,7 @@ impl CloudflareScreen {
             .block(theme_block(" Accounts "))
             .row_highlight_style(if at.field == AccField::Table { focused() } else { normal() })
             .highlight_symbol(" \u{25B6} ")
-            .style(Style::default().fg(FG).bg(BG));
+            .style(Style::default().fg(fg()).bg(bg()));
 
         let mut tstate = TableState::default();
         if !self.cfg.accounts.is_empty() {
@@ -2249,22 +2249,22 @@ impl CloudflareScreen {
 
         // ── Records table ──
         let header = Row::new(vec![
-            Cell::from(Span::styled("Zone", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
-            Cell::from(Span::styled("Type", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
-            Cell::from(Span::styled("Name", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
-            Cell::from(Span::styled("Value", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
-            Cell::from(Span::styled("TTL", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
-            Cell::from(Span::styled("Proxy", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
-            Cell::from(Span::styled("Account", Style::default().fg(TITLE).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("Zone", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("Type", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("Name", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("Value", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("TTL", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("Proxy", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
+            Cell::from(Span::styled("Account", Style::default().fg(title_color()).add_modifier(Modifier::BOLD))),
         ])
-        .style(Style::default().bg(BG2));
+        .style(Style::default().bg(bg2()));
 
         let table_rows: Vec<Row> = visible
             .iter()
             .map(|r| {
                 let proxy_cell = if is_proxiable(&r.type_) {
                     if r.proxied {
-                        Cell::from(Span::styled("\u{2601} on", Style::default().fg(ACCENT)))
+                        Cell::from(Span::styled("\u{2601} on", Style::default().fg(accent())))
                     } else {
                         Cell::from("off")
                     }
@@ -2300,7 +2300,7 @@ impl CloudflareScreen {
         .block(theme_block(&records_title))
         .row_highlight_style(if rt.field == RecField::Table { focused() } else { normal() })
         .highlight_symbol(" \u{25B6} ")
-        .style(Style::default().fg(FG).bg(BG));
+        .style(Style::default().fg(fg()).bg(bg()));
 
         let mut tstate = TableState::default();
         if !visible.is_empty() {
@@ -2339,10 +2339,10 @@ impl CloudflareScreen {
 
         f.render_widget(Clear, modal_area);
         let block = Block::default()
-            .title(Span::styled(" Add DNS Record(s) ", Style::default().fg(TITLE)))
+            .title(Span::styled(" Add DNS Record(s) ", Style::default().fg(title_color())))
             .borders(Borders::ALL)
-            .border_style(Style::default().fg(ACCENT))
-            .style(Style::default().bg(BG2));
+            .border_style(Style::default().fg(accent()))
+            .style(Style::default().bg(bg2()));
         let inner = block.inner(modal_area);
         f.render_widget(block, modal_area);
 
@@ -2429,7 +2429,7 @@ impl CloudflareScreen {
             f.render_widget(
                 Paragraph::new(Line::from(Span::styled(
                     format!("\u{26a0} {} staged record(s) NOT saved yet \u{2014} Esc/Cancel again to discard, or Tab to \"Save All\"", m.pending.len()),
-                    Style::default().fg(RED).add_modifier(Modifier::BOLD),
+                    Style::default().fg(red()).add_modifier(Modifier::BOLD),
                 ))),
                 rows[14],
             );
@@ -2448,7 +2448,7 @@ impl CloudflareScreen {
         } else if self.records_tab.known_zones.is_empty() && m.field == AddField::Zone {
             let hint_area = Rect::new(rows[0].x, rows[0].y.saturating_add(1), rows[0].width.min(70), 1);
             f.render_widget(
-                Paragraph::new(Span::styled("no zones loaded for this account yet — type one, or wait a moment and retry", Style::default().fg(YELLOW))),
+                Paragraph::new(Span::styled("no zones loaded for this account yet — type one, or wait a moment and retry", Style::default().fg(yellow()))),
                 hint_area,
             );
         }
@@ -2461,10 +2461,10 @@ impl CloudflareScreen {
 
         f.render_widget(Clear, modal_area);
         let block = Block::default()
-            .title(Span::styled(format!(" Edit / Delete Record — {} ", m.original.domain), Style::default().fg(TITLE)))
+            .title(Span::styled(format!(" Edit / Delete Record — {} ", m.original.domain), Style::default().fg(title_color())))
             .borders(Borders::ALL)
-            .border_style(Style::default().fg(ACCENT))
-            .style(Style::default().bg(BG2));
+            .border_style(Style::default().fg(accent()))
+            .style(Style::default().bg(bg2()));
         let inner = block.inner(modal_area);
         f.render_widget(block, modal_area);
 
@@ -2593,9 +2593,9 @@ fn render_dropdown(f: &mut Frame, items: &[String], selected_idx: usize, anchor:
     }
     let list_items: Vec<ListItem> = items.iter().map(|s| ListItem::new(s.clone())).collect();
     let list = List::new(list_items)
-        .block(Block::default().borders(Borders::ALL).border_style(Style::default().fg(BORDER)))
-        .highlight_style(Style::default().fg(BG).bg(FG))
-        .style(Style::default().fg(FG).bg(BG2));
+        .block(Block::default().borders(Borders::ALL).border_style(Style::default().fg(border())))
+        .highlight_style(Style::default().fg(bg()).bg(fg()))
+        .style(Style::default().fg(fg()).bg(bg2()));
 
     let x = anchor.x + x_off;
     let y = anchor.y + 1;

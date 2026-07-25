@@ -117,9 +117,9 @@ pub fn draw(f: &mut Frame, picker: &PrivPicker, is_focused: bool, area: Rect) {
                     let style = if is_cursor {
                         focused()
                     } else if checked {
-                        Style::default().fg(GREEN).bg(BG2)
+                        Style::default().fg(green()).bg(bg2())
                     } else {
-                        Style::default().fg(FG2).bg(BG2)
+                        Style::default().fg(fg2()).bg(bg2())
                     };
                     Span::styled(label, style)
                 })
