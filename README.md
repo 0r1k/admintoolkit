@@ -19,6 +19,12 @@ sysadmin tools:
 | **Logs & Journals Reader** | SSH in and read the systemd journal (`journalctl`) or a plain file under `/var/log` (browsable), with severity filtering (warning/error/crit/...), text search, and optional auto-refresh |
 | **Kernel Tuner** | Best-practice sysctl/sysfs/ulimit tuning (134 curated tunables, each with a plain-English why) for desktop, database, traffic, gaming, AI/compute, container/Kubernetes, low-latency, laptop, storage, or security-hardening workloads — local or remote over SSH, runtime-only unless you opt into persisting |
 
+Kernel Tuner in action — connect to localhost, browse the catalog, bulk-stage
+a whole "Gaming Server" profile in one keypress, and review the diff before
+anything touches the real system:
+
+![Kernel Tuner demo](docs/kerneltuner-demo.gif)
+
 The MySQL, PostgreSQL and ClickHouse managers all save reusable **connection
 profiles** (label, host, port, DB user, encrypted password, optional SSH
 tunnel settings) so credentials are only entered once — pick a saved
