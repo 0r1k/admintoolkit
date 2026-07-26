@@ -1,0 +1,27 @@
+name: Feature request
+description: Suggest a new tool, screen, or improvement for atk
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: What are you trying to do that atk doesn't currently support?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: How would you want this to work? Which existing tool would it extend, or is this a new module?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any other tools or workarounds you've tried instead.
+    validations:
+      required: false

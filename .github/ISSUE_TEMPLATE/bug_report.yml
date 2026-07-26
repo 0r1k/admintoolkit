@@ -1,0 +1,67 @@
+name: Bug report
+description: Something in atk isn't working as expected
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug, and what you expected instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: The exact keys/screens you used, in order.
+      placeholder: |
+        1. Open atk, select "Kernel Tuner"
+        2. F2 to Catalog, filter by "Gaming Server"
+        3. ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: module
+    attributes:
+      label: Which tool?
+      options:
+        - SSH Server Manager
+        - SSH User Manager
+        - Cloudflare DNS Manager
+        - GoDaddy DNS Manager
+        - MySQL User Manager
+        - PostgreSQL User Manager
+        - ClickHouse User Manager
+        - Logs & Journals Reader
+        - Kernel Tuner
+        - Home menu / general
+        - Other / not sure
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: atk version / commit
+      description: Output of `atk --version` if available, otherwise the git commit hash you built from.
+    validations:
+      required: false
+
+  - type: input
+    id: os
+    attributes:
+      label: OS / terminal
+      description: e.g. Fedora 44 + Konsole, Ubuntu 24.04 + GNOME Terminal, macOS + iTerm2
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant output
+      description: Anything from atk's History panel, or terminal output. Redact hostnames/credentials/tokens.
+      render: shell
+    validations:
+      required: false
