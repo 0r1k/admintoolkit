@@ -4,7 +4,7 @@ By [or1k.net](https://or1k.net)
 
 ![atk home menu](docs/screenshot.png)
 
-A single Rust + [ratatui](https://ratatui.rs) TUI binary that bundles nine
+A single Rust + [ratatui](https://ratatui.rs) TUI binary that bundles ten
 sysadmin tools:
 
 | Module | What it does |
@@ -18,6 +18,7 @@ sysadmin tools:
 | **ClickHouse User Manager** | Create/list/edit/delete ClickHouse users (password, profile, allowed IPs) — direct SQL over HTTP (optionally via an SSH tunnel) or the legacy SSH + `users.d/*.xml` route |
 | **Logs & Journals Reader** | SSH in and read the systemd journal (`journalctl`) or a plain file under `/var/log` (browsable), with severity filtering (warning/error/crit/...), text search, and optional auto-refresh |
 | **Kernel Tuner** | Best-practice sysctl/sysfs/ulimit tuning (134 curated tunables, each with a plain-English why) for desktop, database, traffic, gaming, AI/compute, container/Kubernetes, low-latency, laptop, storage, or security-hardening workloads — local or remote over SSH, runtime-only unless you opt into persisting |
+| **SSL Certificate Manager** | Detects what's actually serving TLS on `:443` (web server + version, every vhost's domains) straight from the live nginx/apache config, shows each cert's expiry, and swaps in a new cert — and, separately, a new CA/chain file — with a config test before reload and automatic rollback if it fails |
 
 Kernel Tuner in action — connect to localhost, browse the catalog, bulk-stage
 a whole "Gaming Server" profile in one keypress, and review the diff before
@@ -48,7 +49,9 @@ cargo build --release
 
 ## Config
 
-All nine modules share one config directory:
+Every module that needs to persist something shares one config directory
+(the SSL Certificate Manager doesn't — it has no saved state of its own,
+only the live server config it reads each time):
 
 ```text
 Linux:   ~/.config/admintoolkit/
@@ -236,6 +239,33 @@ oneshot unit to replay sysfs values at boot, or the relevant `limits.d`
 entry. Revert knows about that distinction too, and cleans up the
 persisted entry along with the live value.
 
+### SSL Certificate Manager
+
+Remote-only — a certificate belongs to the server being administered, not
+whatever machine happens to run `atk`. Connect over SSH and it finds
+whatever's actually listening on `:443` (`ss -ltnp` resolves the PID to a
+binary, identifying nginx or apache and its version), then reads the
+*live* config straight off the server (`nginx -T`, or the vhost files
+`apache2ctl -S` points at) rather than guessing, so every domain
+(`server_name`/`ServerName`+`ServerAlias`) and cert/key/CA path shown is
+exactly what the web server itself would use. One batched `openssl x509`
+call gets every cert's expiry in a single round trip; the table sorts
+soonest-to-expire (and anything that failed to read) to the top.
+
+Updating a cert walks a local file picker for the new certificate, then a
+keyboard-only prompt asking whether a separate CA/chain file is also
+needed — nginx's `ssl_certificate`/`ssl_certificate_key`/`ssl_trusted_certificate`
+and Apache's `SSLCertificateFile`/`SSLCertificateKeyFile`/`SSLCertificateChainFile`
+both distinguish "the cert" from "a separate CA" as two different
+directives, and atk handles both shapes: if the CA already lives in its
+own file, that file gets replaced too; if it doesn't and you supply one
+anyway, atk adds the directive itself (marked with an `atk:BEGIN`/`atk:END`
+comment block so it's easy to find and remove by hand later). Every write
+is preceded by a backup of what was there, followed by the web server's
+own config test (`nginx -t` / `apachectl -t`) — only a passing test
+triggers a reload; a failing one rolls the backup straight back and never
+touches the running service.
+
 ## CLI (scriptable, non-interactive)
 
 The SSH User Manager also has a non-interactive CLI, useful for scripting
@@ -331,7 +361,7 @@ save step — and reloaded on the next launch.
 
 ## Why one binary
 
-Nine sysadmin tools, one static Rust binary, one shared config directory —
+Ten sysadmin tools, one static Rust binary, one shared config directory —
 easier to ship to a server or a teammate than juggling separate toolchains,
 install paths, and configs, with consistent keybindings/theme across every
 tool.

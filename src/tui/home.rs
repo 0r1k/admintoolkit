@@ -78,6 +78,12 @@ const DEFAULT_ITEMS: &[HomeItem] = &[
         bin: "kerneltune",
         screen: Screen::KernelTune,
     },
+    HomeItem {
+        title: "SSL Certificate Manager",
+        desc: "Detects what's on :443 (nginx/apache, version, domains), shows cert expiry, and safely swaps in a new cert + CA/chain file with a config test before reload",
+        bin: "sslcert",
+        screen: Screen::SslCert,
+    },
 ];
 
 fn screen_key(s: Screen) -> &'static str {
@@ -92,6 +98,7 @@ fn screen_key(s: Screen) -> &'static str {
         Screen::ClickHouse => "clickhouse",
         Screen::Logs => "logs",
         Screen::KernelTune => "kerneltune",
+        Screen::SslCert => "sslcert",
     }
 }
 
@@ -106,8 +113,55 @@ fn screen_from_key(key: &str) -> Option<Screen> {
         "clickhouse" => Some(Screen::ClickHouse),
         "logs" => Some(Screen::Logs),
         "kerneltune" => Some(Screen::KernelTune),
+        "sslcert" => Some(Screen::SslCert),
         _ => None,
     }
+}
+
+/// Greedy word-wrap: as many whole words as fit per line at `width`
+/// columns. Used instead of a `Paragraph`'s built-in `Wrap` because these
+/// descriptions live inside `List` rows (for the highlight-whole-item
+/// selection style every other row-based screen uses), and `List` never
+/// reflows a `Line`'s text itself — it only ever clips at the container's
+/// edge, which is what left descriptions truncated instead of wrapping
+/// when the terminal was narrower than the text.
+fn wrap_text(s: &str, width: usize) -> Vec<String> {
+    let width = width.max(1);
+    let mut lines = Vec::new();
+    let mut cur = String::new();
+    for word in s.split_whitespace() {
+        if cur.is_empty() {
+            cur.push_str(word);
+        } else if cur.chars().count() + 1 + word.chars().count() <= width {
+            cur.push(' ');
+            cur.push_str(word);
+        } else {
+            lines.push(std::mem::take(&mut cur));
+            cur.push_str(word);
+        }
+    }
+    if !cur.is_empty() || lines.is_empty() {
+        lines.push(cur);
+    }
+    lines
+}
+
+const DESC_INDENT: &str = "     ";
+
+/// Row count (title line + wrapped description lines + one blank spacer)
+/// each item in `order` will actually render at, for a list content area
+/// `desc_width` columns wide (i.e. already excluding the block's border
+/// and `DESC_INDENT`). `draw` and `HomeState::handle_mouse` both call this
+/// with the same inputs so a click always lands on the item it looks like
+/// it landed on, regardless of how the description happened to wrap.
+fn item_heights(order: &[Screen], desc_width: usize) -> Vec<usize> {
+    order
+        .iter()
+        .map(|s| {
+            let item = DEFAULT_ITEMS.iter().find(|i| i.screen == *s).expect("every Screen in `order` exists in DEFAULT_ITEMS");
+            1 + wrap_text(item.desc, desc_width).len() + 1
+        })
+        .collect()
 }
 
 fn order_path() -> PathBuf {
@@ -236,10 +290,15 @@ impl HomeState {
         if y < list_area.y + 1 || y + 1 >= list_area.y + list_area.height {
             return None;
         }
-        let idx = ((y - (list_area.y + 1)) / 3) as usize;
-        if idx < self.order.len() {
-            self.selected = idx;
-            return Some(self.order[idx]);
+        let desc_width = (list_area.width as usize).saturating_sub(2).saturating_sub(DESC_INDENT.len()).max(10);
+        let heights = item_heights(&self.order, desc_width);
+        let mut rel_y = (y - (list_area.y + 1)) as usize;
+        for (idx, h) in heights.iter().enumerate() {
+            if rel_y < *h {
+                self.selected = idx;
+                return Some(self.order[idx]);
+            }
+            rel_y -= h;
         }
         None
     }
@@ -271,21 +330,22 @@ pub fn draw(f: &mut Frame, state: &HomeState, area: Rect) {
         chunks[0],
     );
 
+    let desc_width = (chunks[1].width as usize).saturating_sub(2).saturating_sub(DESC_INDENT.len()).max(10);
     let items: Vec<ListItem> = state
         .order
         .iter()
         .enumerate()
         .map(|(i, screen)| {
             let item = state.item(*screen);
-            let lines = vec![
-                Line::from(vec![
-                    Span::styled(format!("  {}. ", i + 1), Style::default().fg(fg2())),
-                    Span::styled(item.title, Style::default().fg(fg()).add_modifier(Modifier::BOLD)),
-                    Span::styled(format!("  ({})", item.bin), Style::default().fg(fg2())),
-                ]),
-                Line::from(Span::styled(format!("     {}", item.desc), Style::default().fg(fg2()))),
-                Line::from(""),
-            ];
+            let mut lines = vec![Line::from(vec![
+                Span::styled(format!("  {}. ", i + 1), Style::default().fg(fg2())),
+                Span::styled(item.title, Style::default().fg(fg()).add_modifier(Modifier::BOLD)),
+                Span::styled(format!("  ({})", item.bin), Style::default().fg(fg2())),
+            ])];
+            for w in wrap_text(item.desc, desc_width) {
+                lines.push(Line::from(Span::styled(format!("{DESC_INDENT}{w}"), Style::default().fg(fg2()))));
+            }
+            lines.push(Line::from(""));
             ListItem::new(lines)
         })
         .collect();

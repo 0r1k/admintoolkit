@@ -14,6 +14,7 @@ mod mysql_screen;
 mod postgresql_screen;
 mod priv_picker;
 mod sshuser_screen;
+mod sslcert_screen;
 mod theme;
 
 use std::{io, time::{Duration, Instant}};
@@ -66,6 +67,7 @@ enum Screen {
     ClickHouse,
     Logs,
     KernelTune,
+    SslCert,
 }
 
 /// An action a screen can't perform itself because it needs the terminal
@@ -91,6 +93,7 @@ struct App {
     clickhouse: Option<clickhouse_screen::ClickHouseScreen>,
     logs: Option<logs_screen::LogsScreen>,
     kerneltune: Option<kerneltune_screen::KernelTuneScreen>,
+    sslcert: Option<sslcert_screen::SslCertScreen>,
     should_quit: bool,
     /// Some real terminals (and some multiplexers sitting between one and
     /// us) report a single physical left-click as more than one `Down`
@@ -139,6 +142,7 @@ impl App {
             clickhouse: None,
             logs: None,
             kerneltune: None,
+            sslcert: None,
             should_quit: false,
             last_click: None,
             mouse_enabled: false,
@@ -192,6 +196,11 @@ impl App {
                     self.kerneltune = Some(kerneltune_screen::KernelTuneScreen::new());
                 }
             }
+            Screen::SslCert => {
+                if self.sslcert.is_none() {
+                    self.sslcert = Some(sslcert_screen::SslCertScreen::new());
+                }
+            }
             Screen::Home => {}
         }
         self.screen = screen;
@@ -223,6 +232,9 @@ impl App {
             s.tick();
         }
         if let Some(s) = &mut self.kerneltune {
+            s.tick();
+        }
+        if let Some(s) = &mut self.sslcert {
             s.tick();
         }
     }
@@ -328,6 +340,11 @@ impl App {
                     s.handle_mouse(me, area);
                 }
             }
+            Screen::SslCert => {
+                if let Some(s) = &mut self.sslcert {
+                    s.handle_mouse(me, area);
+                }
+            }
         }
     }
 
@@ -424,6 +441,12 @@ impl App {
                     self.screen = Screen::Home;
                 }
             }
+            Screen::SslCert => {
+                let back = self.sslcert.as_mut().map(|s| s.handle_key(key)).unwrap_or(true);
+                if back {
+                    self.screen = Screen::Home;
+                }
+            }
         }
     }
 
@@ -474,6 +497,11 @@ impl App {
             }
             Screen::KernelTune => {
                 if let Some(s) = &self.kerneltune {
+                    s.draw(f, area);
+                }
+            }
+            Screen::SslCert => {
+                if let Some(s) = &self.sslcert {
                     s.draw(f, area);
                 }
             }

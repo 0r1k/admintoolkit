@@ -14,6 +14,7 @@ mod secret;
 mod ssh_exec;
 mod ssh_tunnel;
 mod sshuser;
+mod sslcert;
 mod tui;
 
 #[derive(Parser)]
