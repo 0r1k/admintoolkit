@@ -2,7 +2,7 @@
 
 By [or1k.net](https://or1k.net)
 
-![atk home menu](docs/screenshot.png)
+![atk home menu](docs/homemenu-demo.gif)
 
 A single Rust + [ratatui](https://ratatui.rs) TUI binary that bundles eleven
 sysadmin tools:
@@ -20,12 +20,6 @@ sysadmin tools:
 | **Kernel Tuner** | Best-practice sysctl/sysfs/ulimit tuning (134 curated tunables, each with a plain-English why) for desktop, database, traffic, gaming, AI/compute, container/Kubernetes, low-latency, laptop, storage, or security-hardening workloads — local or remote over SSH, runtime-only unless you opt into persisting |
 | **SSL Certificate Manager** | Detects what's actually serving TLS on `:443` (web server + version, every vhost's domains) straight from the live nginx/apache config, shows each cert's expiry, and swaps in a new cert — and, separately, a new CA/chain file — with a config test before reload and automatic rollback if it fails |
 | **Config Syntax Checker** | Validates JSON/TOML/YAML/XML files, local or over SSH, with a full-size scrollable error view instead of a one-line summary — and an optional best-effort auto-fix for common mechanical mistakes, gated behind an explicit confirmation and a backup |
-
-Kernel Tuner in action — connect to localhost, browse the catalog, bulk-stage
-a whole "Gaming Server" profile in one keypress, and review the diff before
-anything touches the real system:
-
-![Kernel Tuner demo](docs/kerneltuner-demo.gif)
 
 The MySQL, PostgreSQL and ClickHouse managers all save reusable **connection
 profiles** (label, host, port, DB user, encrypted password, optional SSH
@@ -123,6 +117,20 @@ semicolon-separated **Advanced** field (`Key: Value; Key2: Value2`) instead
 of a dedicated widget each — nothing is lost, it just isn't all
 individually labeled.
 
+![SSH Server Manager demo](docs/easyssh-demo.gif)
+
+### SSH User Manager
+
+Saved SSH key **profiles** (a name + a public key) get provisioned onto one
+or more remote hosts at once — a comma-separated server list, or one built
+up by mixing pasted IPs with picks from the same host picker every other
+screen uses. Add and Remove each run as one batched SSH session per host,
+reporting per-host success/failure rather than stopping at the first
+failure. The same logic backs both the TUI and the
+[scriptable CLI](#cli-scriptable-non-interactive) below.
+
+![SSH User Manager demo](docs/sshuser-demo.gif)
+
 ### One host, entered once
 
 Every screen with an SSH-related field (SSH User Manager's Servers list;
@@ -176,6 +184,8 @@ severe, same idea `journalctl -p` uses). **Auto-refresh** re-runs the same
 query every 5s for a rough `tail -f` feel without holding a long-lived
 streaming connection open.
 
+![Logs & Journals Reader demo](docs/logs-demo.gif)
+
 ### MySQL / PostgreSQL: direct connection vs. SSH tunnel
 
 Each connection profile can either dial the database directly, or open an
@@ -187,6 +197,21 @@ has user-management privileges — the connection form reminds you of this
 (root / a MySQL admin user with `CREATE USER`/`GRANT`, or the `postgres`
 superuser / a role with `CREATEROLE`).
 
+![MySQL User Manager demo](docs/mysql-demo.gif)
+![PostgreSQL User Manager demo](docs/postgresql-demo.gif)
+
+### ClickHouse User Manager
+
+Direct `SQL` mode issues real `CREATE USER`/`GRANT` statements over
+ClickHouse's HTTP interface. Legacy `SSH (XML)` mode instead writes
+`/etc/clickhouse-server/users.d/<username>.xml` over SSH — one file per
+user — for deployments that provision users that way instead of through
+SQL; a **Tag Mode** field picks which root tag (`<users>`/`<clickhouse>`/...)
+that generated file uses, matching whatever the rest of the server's config
+already expects.
+
+![ClickHouse User Manager demo](docs/clickhouse-demo.gif)
+
 ### GoDaddy DNS Manager
 
 Opening the Records tab auto-fetches every configured account's records
@@ -195,6 +220,8 @@ an account or domain from the Fetch box's dropdowns re-fetches
 automatically too — no separate "Fetch" click needed unless you want a
 manual refresh. Press `y` on a selected record to copy its Value to the
 clipboard (the IP an A record points at, say).
+
+![GoDaddy DNS Manager demo](docs/godaddy-demo.gif)
 
 ### Cloudflare DNS Manager
 
@@ -213,6 +240,8 @@ workaround; and A/AAAA/CNAME records get a **Proxied** toggle (Cloudflare's
 orange-cloud proxy/CDN, versus grey-cloud DNS-only) right in the Add/Edit
 form. TTL follows Cloudflare's own convention — `1` means "Automatic" and
 is the default for new records; the table shows it as `Auto`.
+
+![Cloudflare DNS Manager demo](docs/cloudflare-demo.gif)
 
 ### Kernel Tuner
 
@@ -240,6 +269,12 @@ oneshot unit to replay sysfs values at boot, or the relevant `limits.d`
 entry. Revert knows about that distinction too, and cleans up the
 persisted entry along with the live value.
 
+Kernel Tuner in action — connect to localhost, browse the catalog,
+bulk-stage a whole "Gaming Server" profile in one keypress, and review the
+diff before anything touches the real system:
+
+![Kernel Tuner demo](docs/kerneltuner-demo.gif)
+
 ### SSL Certificate Manager
 
 Remote-only — a certificate belongs to the server being administered, not
@@ -266,6 +301,8 @@ is preceded by a backup of what was there, followed by the web server's
 own config test (`nginx -t` / `apachectl -t`) — only a passing test
 triggers a reload; a failing one rolls the backup straight back and never
 touches the running service.
+
+![SSL Certificate Manager demo](docs/sslcert-demo.gif)
 
 ### Config Syntax Checker
 
