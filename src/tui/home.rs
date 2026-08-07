@@ -84,6 +84,12 @@ const DEFAULT_ITEMS: &[HomeItem] = &[
         bin: "sslcert",
         screen: Screen::SslCert,
     },
+    HomeItem {
+        title: "Config Syntax Checker",
+        desc: "Validates JSON/TOML/YAML/XML config files, local or over SSH — full-size error view, and an optional best-effort auto-fix with a confirm step first",
+        bin: "cfgcheck",
+        screen: Screen::ConfigCheck,
+    },
 ];
 
 fn screen_key(s: Screen) -> &'static str {
@@ -99,6 +105,7 @@ fn screen_key(s: Screen) -> &'static str {
         Screen::Logs => "logs",
         Screen::KernelTune => "kerneltune",
         Screen::SslCert => "sslcert",
+        Screen::ConfigCheck => "configcheck",
     }
 }
 
@@ -114,6 +121,7 @@ fn screen_from_key(key: &str) -> Option<Screen> {
         "logs" => Some(Screen::Logs),
         "kerneltune" => Some(Screen::KernelTune),
         "sslcert" => Some(Screen::SslCert),
+        "configcheck" => Some(Screen::ConfigCheck),
         _ => None,
     }
 }

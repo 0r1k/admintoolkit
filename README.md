@@ -4,7 +4,7 @@ By [or1k.net](https://or1k.net)
 
 ![atk home menu](docs/screenshot.png)
 
-A single Rust + [ratatui](https://ratatui.rs) TUI binary that bundles ten
+A single Rust + [ratatui](https://ratatui.rs) TUI binary that bundles eleven
 sysadmin tools:
 
 | Module | What it does |
@@ -19,6 +19,7 @@ sysadmin tools:
 | **Logs & Journals Reader** | SSH in and read the systemd journal (`journalctl`) or a plain file under `/var/log` (browsable), with severity filtering (warning/error/crit/...), text search, and optional auto-refresh |
 | **Kernel Tuner** | Best-practice sysctl/sysfs/ulimit tuning (134 curated tunables, each with a plain-English why) for desktop, database, traffic, gaming, AI/compute, container/Kubernetes, low-latency, laptop, storage, or security-hardening workloads — local or remote over SSH, runtime-only unless you opt into persisting |
 | **SSL Certificate Manager** | Detects what's actually serving TLS on `:443` (web server + version, every vhost's domains) straight from the live nginx/apache config, shows each cert's expiry, and swaps in a new cert — and, separately, a new CA/chain file — with a config test before reload and automatic rollback if it fails |
+| **Config Syntax Checker** | Validates JSON/TOML/YAML/XML files, local or over SSH, with a full-size scrollable error view instead of a one-line summary — and an optional best-effort auto-fix for common mechanical mistakes, gated behind an explicit confirmation and a backup |
 
 Kernel Tuner in action — connect to localhost, browse the catalog, bulk-stage
 a whole "Gaming Server" profile in one keypress, and review the diff before
@@ -265,6 +266,30 @@ is preceded by a backup of what was there, followed by the web server's
 own config test (`nginx -t` / `apachectl -t`) — only a passing test
 triggers a reload; a failing one rolls the backup straight back and never
 touches the running service.
+
+### Config Syntax Checker
+
+Validates JSON, TOML, YAML/YML, and XML — local files or ones on a remote
+host over SSH, picked the same way (Local/Remote is chosen on a Target
+tab, same as Kernel Tuner). The format is guessed from the file's
+extension, or can be forced by hand. A file picker (browsing over the
+same local-or-SSH connection, not just the local filesystem) is one
+keypress away — hit `Enter` on the Path field or press Browse — but you
+can just as well paste or type a path directly.
+
+Errors show up in a large scrollable window, not the small history log,
+since a real parser error is often several lines with a line/column
+pointer that's worth actually being able to read. From there, an invalid
+file can be sent through a best-effort automatic fixer — but only after
+an explicit, keyboard-only confirmation, since that step writes to the
+file (a timestamped backup is kept regardless). The fixer only touches
+unambiguous formatting mistakes, never anything that requires guessing
+the author's intent: stray trailing commas and `//`/`/* */` comments in
+JSON, tab-indentation in YAML, an unescaped `&` in XML, plus BOM/smart-quote
+cleanup everywhere. Structural breakage — an unclosed bracket, a missing
+`:`/`=`, a mismatched tag — is deliberately left alone and reported as-is,
+since there's more than one plausible fix and guessing wrong would corrupt
+the file's structure rather than just its formatting.
 
 ## CLI (scriptable, non-interactive)
 

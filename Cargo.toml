@@ -27,3 +27,6 @@ arboard = "3"
 regex = "1"
 mysql = { version = "25", default-features = false, features = ["minimal"] }
 postgres = "0.19"
+toml = "0.8"
+serde_yaml = "0.9"
+roxmltree = "0.20"

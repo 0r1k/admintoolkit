@@ -4,6 +4,7 @@ use std::process;
 mod clickhouse;
 mod cloudflare;
 mod config;
+mod config_check;
 mod easyssh_mgr;
 mod godaddy;
 mod kerneltune;
