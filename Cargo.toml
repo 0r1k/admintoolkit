@@ -30,3 +30,6 @@ postgres = "0.19"
 toml = "0.8"
 serde_yaml = "0.9"
 roxmltree = "0.20"
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"

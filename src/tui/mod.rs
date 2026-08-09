@@ -612,7 +612,7 @@ fn run_pending_action<B: ratatui::backend::Backend + io::Write>(
             disable_raw_mode()?;
             execute!(terminal.backend_mut(), LeaveAlternateScreen, DisableMouseCaptureMinimal)?;
 
-            let status = std::process::Command::new(&program).args(&args).status();
+            let status = run_interactive_child(&program, &args);
 
             enable_raw_mode()?;
             execute!(terminal.backend_mut(), EnterAlternateScreen)?;
@@ -627,4 +627,44 @@ fn run_pending_action<B: ratatui::backend::Backend + io::Write>(
         }
     }
     Ok(())
+}
+
+/// Runs `program` with the terminal handed over, protecting atk itself from
+/// Ctrl+C while it does.
+///
+/// Outside raw mode (which is off for the whole duration this child owns
+/// the tty) the terminal driver turns Ctrl+C into a real `SIGINT`, delivered
+/// to the *entire foreground process group* — and since the child (e.g.
+/// `ssh`) is never given its own process group, that group still includes
+/// this process. With no handler installed, Rust's default disposition for
+/// `SIGINT` is immediate termination: pressing Ctrl+C to back out of a
+/// stuck/refused `ssh` connection was killing atk in the same instant,
+/// which is why the app appeared to just vanish back to the shell instead
+/// of returning to the SSH Server Manager. Ignoring `SIGINT` here for the
+/// wait keeps atk alive; the child still gets the signal delivered with its
+/// default disposition restored via `pre_exec` (ignoring a signal, unlike
+/// installing a handler, survives `exec` — so without this reset the child
+/// would inherit "ignore" too and become uninterruptible).
+#[cfg(unix)]
+fn run_interactive_child(program: &str, args: &[String]) -> io::Result<std::process::ExitStatus> {
+    use std::os::unix::process::CommandExt;
+
+    let mut cmd = std::process::Command::new(program);
+    cmd.args(args);
+    unsafe {
+        cmd.pre_exec(|| {
+            libc::signal(libc::SIGINT, libc::SIG_DFL);
+            Ok(())
+        });
+    }
+
+    let prev = unsafe { libc::signal(libc::SIGINT, libc::SIG_IGN) };
+    let status = cmd.status();
+    unsafe { libc::signal(libc::SIGINT, prev) };
+    status
+}
+
+#[cfg(not(unix))]
+fn run_interactive_child(program: &str, args: &[String]) -> io::Result<std::process::ExitStatus> {
+    std::process::Command::new(program).args(args).status()
 }

@@ -18,6 +18,7 @@ dependencies = [
  "clap",
  "crossterm",
  "dirs",
+ "libc",
  "mysql",
  "postgres",
  "rand 0.8.7",
