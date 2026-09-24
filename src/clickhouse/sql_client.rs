@@ -143,6 +143,31 @@ pub fn delete_user(cfg: &ConnectionWithSecrets, username: &str) -> Result<(), St
     Ok(())
 }
 
+pub fn create_database(cfg: &ConnectionWithSecrets, name: &str, engine: &str, cluster: &str) -> Result<(), String> {
+    execute(cfg, &create_database_sql(name, engine, cluster)?)?;
+    Ok(())
+}
+
+/// `CREATE DATABASE` statement with optional `ON CLUSTER` and `ENGINE`
+/// (empty = none / server default, i.e. `Atomic`). Shared with the
+/// SSH-XML route, which runs it through `clickhouse-client` instead.
+/// `engine` is spliced verbatim so arguments like
+/// `Replicated('/clickhouse/db', '{shard}', '{replica}')` work — only
+/// statement terminators are rejected.
+pub fn create_database_sql(name: &str, engine: &str, cluster: &str) -> Result<String, String> {
+    let mut sql = format!("CREATE DATABASE {}", quote_ident(name));
+    if !cluster.is_empty() {
+        sql.push_str(&format!(" ON CLUSTER {}", quote_ident(cluster)));
+    }
+    if !engine.is_empty() {
+        if engine.contains(';') {
+            return Err(format!("invalid engine {engine:?}"));
+        }
+        sql.push_str(&format!(" ENGINE = {engine}"));
+    }
+    Ok(sql)
+}
+
 /// Escapes a ClickHouse string literal.
 fn quote_lit(s: &str) -> String {
     format!("'{}'", s.replace('\\', "\\\\").replace('\'', "\\'"))
@@ -151,4 +176,25 @@ fn quote_lit(s: &str) -> String {
 /// Escapes a ClickHouse identifier (user name).
 fn quote_ident(s: &str) -> String {
     format!("`{}`", s.replace('`', "\\`"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn create_database_sql_builds_optional_clauses() {
+        assert_eq!(create_database_sql("logs", "", "").unwrap(), "CREATE DATABASE `logs`");
+        assert_eq!(create_database_sql("logs", "Atomic", "").unwrap(), "CREATE DATABASE `logs` ENGINE = Atomic");
+        assert_eq!(
+            create_database_sql("logs", "Replicated('/ch/db', '{shard}', '{replica}')", "main").unwrap(),
+            "CREATE DATABASE `logs` ON CLUSTER `main` ENGINE = Replicated('/ch/db', '{shard}', '{replica}')"
+        );
+    }
+
+    #[test]
+    fn create_database_sql_escapes_name_and_rejects_statement_injection() {
+        assert_eq!(create_database_sql("we`ird", "", "").unwrap(), "CREATE DATABASE `we\\`ird`");
+        assert!(create_database_sql("logs", "Atomic; DROP DATABASE x", "").is_err());
+    }
 }

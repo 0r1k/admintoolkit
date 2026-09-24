@@ -18,6 +18,7 @@ use crate::postgres_mgr::{
     config::{self, Connection, ConnectionInput, ConnectionWithSecrets},
 };
 
+use super::create_db_modal::{self, CreateDbAction, CreateDbModal, OptSpec};
 use super::file_picker::FilePicker;
 use super::host_picker::HostPicker;
 use super::mouse;
@@ -249,11 +250,13 @@ enum UsersField {
     BtnConnect,
     Table,
     BtnAddUser,
+    BtnCreateDb,
 }
 
 enum UserModal {
     Add(AddUserModal),
     Edit(EditUserModal),
+    CreateDb(CreateDbModal),
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -376,15 +379,17 @@ impl UsersTab {
             UsersField::Connection => UsersField::BtnConnect,
             UsersField::BtnConnect => UsersField::Table,
             UsersField::Table => UsersField::BtnAddUser,
-            UsersField::BtnAddUser => UsersField::Connection,
+            UsersField::BtnAddUser => UsersField::BtnCreateDb,
+            UsersField::BtnCreateDb => UsersField::Connection,
         };
     }
     fn prev_field(&mut self) {
         self.field = match self.field {
-            UsersField::Connection => UsersField::BtnAddUser,
+            UsersField::Connection => UsersField::BtnCreateDb,
             UsersField::BtnConnect => UsersField::Connection,
             UsersField::Table => UsersField::BtnConnect,
             UsersField::BtnAddUser => UsersField::Table,
+            UsersField::BtnCreateDb => UsersField::BtnAddUser,
         };
     }
 }
@@ -508,6 +513,13 @@ impl PostgresqlScreen {
             // stopped working" — a click dismisses it, same as Enter/Esc.
             if mouse::left_click(&me).is_some() {
                 self.modal = None;
+            }
+            return;
+        }
+        if matches!(self.users_tab.modal, Some(UserModal::CreateDb(_))) {
+            if let Some(UserModal::CreateDb(mut m)) = self.users_tab.modal.take() {
+                let action = m.handle_mouse(&me, area);
+                self.apply_create_db_action(m, action);
             }
             return;
         }
@@ -698,12 +710,16 @@ impl PostgresqlScreen {
 
         let action_inner = mouse::block_inner(chunks[2]);
         let action_rows = Layout::default().direction(Direction::Vertical).margin(1).constraints([Constraint::Length(1), Constraint::Length(1)]).split(action_inner);
-        if mouse::button_row_hit(x, y, action_rows[0], &["Add User"]).is_some() {
-            if self.connection_by_label(self.users_tab.connection_input.value().trim()).is_none() {
-                self.error("Select a valid connection first (use the dropdown)");
-            } else {
-                self.users_tab.modal = Some(UserModal::Add(AddUserModal::new()));
+        match mouse::button_row_hit(x, y, action_rows[0], &["Add User", "Create Database"]) {
+            Some(0) => {
+                if self.connection_by_label(self.users_tab.connection_input.value().trim()).is_none() {
+                    self.error("Select a valid connection first (use the dropdown)");
+                } else {
+                    self.users_tab.modal = Some(UserModal::Add(AddUserModal::new()));
+                }
             }
+            Some(_) => self.open_create_db_modal(),
+            None => {}
         }
     }
 
@@ -1064,6 +1080,7 @@ impl PostgresqlScreen {
                         self.users_tab.modal = Some(UserModal::Add(AddUserModal::new()));
                     }
                 }
+                UsersField::BtnCreateDb => self.open_create_db_modal(),
                 _ => self.users_tab.next_field(),
             },
             KeyCode::Char(c) if ut.field == UsersField::Connection => {
@@ -1167,8 +1184,60 @@ impl PostgresqlScreen {
                     self.users_tab.modal = Some(UserModal::Edit(m));
                 }
             }
+            Some(UserModal::CreateDb(mut m)) => {
+                let action = m.handle_key(key);
+                self.apply_create_db_action(m, action);
+            }
             None => {}
         }
+    }
+
+    fn open_create_db_modal(&mut self) {
+        if self.connection_by_label(self.users_tab.connection_input.value().trim()).is_none() {
+            self.error("Select a valid connection first (use the dropdown)");
+        } else {
+            self.users_tab.modal = Some(UserModal::CreateDb(new_create_db_modal()));
+        }
+    }
+
+    /// Keeps the modal open unless it was closed or a create was launched
+    /// (a validation error leaves it open so the input isn't lost).
+    fn apply_create_db_action(&mut self, m: CreateDbModal, action: CreateDbAction) {
+        let keep = match action {
+            CreateDbAction::None => true,
+            CreateDbAction::Close => false,
+            CreateDbAction::Submit => !self.submit_create_db(&m),
+        };
+        if keep {
+            self.users_tab.modal = Some(UserModal::CreateDb(m));
+        }
+    }
+
+    /// Returns `true` once the create was launched in the background.
+    fn submit_create_db(&mut self, m: &CreateDbModal) -> bool {
+        let (name, opt1, opt2) = m.values();
+        if name.is_empty() {
+            self.error("Database name is required");
+            return false;
+        }
+        let label = self.users_tab.connection_input.value().trim().to_string();
+        let Some(cfg) = self.connection_by_label(&label) else {
+            self.error("Select a valid connection");
+            return false;
+        };
+        let tx = self.tx.clone();
+        thread::spawn(move || {
+            let result = (|| -> Result<(), String> {
+                let mut conn = client::connect(&cfg)?;
+                client::create_database(&mut conn, &name, &opt1, &opt2)
+            })();
+            let msg = match result {
+                Ok(()) => Msg::Log(true, format!("Database {name} created")),
+                Err(e) => Msg::Log(false, format!("Failed to create database {name}: {}", one_line(&e))),
+            };
+            let _ = tx.send(msg);
+        });
+        true
     }
 
     fn handle_add_user_modal_key(&mut self, m: &mut AddUserModal, key: KeyEvent) -> bool {
@@ -1393,6 +1462,7 @@ impl PostgresqlScreen {
             match &self.users_tab.modal {
                 Some(UserModal::Add(m)) => self.draw_add_user_modal(f, m, area),
                 Some(UserModal::Edit(m)) => self.draw_edit_user_modal(f, m, area),
+                Some(UserModal::CreateDb(m)) => create_db_modal::draw(f, m, area),
                 None => {}
             }
         }
@@ -1653,7 +1723,14 @@ impl PostgresqlScreen {
         let action_inner = action_block.inner(chunks[2]);
         f.render_widget(action_block, chunks[2]);
         let action_rows = Layout::default().direction(Direction::Vertical).margin(1).constraints([Constraint::Length(1), Constraint::Length(1)]).split(action_inner);
-        f.render_widget(Paragraph::new(Line::from(vec![btn_span("Add User", ut.field == UsersField::BtnAddUser)])), action_rows[0]);
+        f.render_widget(
+            Paragraph::new(Line::from(vec![
+                btn_span("Add User", ut.field == UsersField::BtnAddUser),
+                Span::raw("  "),
+                btn_span("Create Database", ut.field == UsersField::BtnCreateDb),
+            ])),
+            action_rows[0],
+        );
         f.render_widget(
             Paragraph::new(Line::from(Span::styled("Enter on a table row opens Change Password / Drop", lbl()))),
             action_rows[1],
@@ -1805,6 +1882,16 @@ impl PostgresqlScreen {
         );
         f.render_widget(Paragraph::new(Line::from(Span::styled("Tab navigate  \u{2022}  Enter activate  \u{2022}  Esc cancel", lbl()))), rows[6]);
     }
+}
+
+fn new_create_db_modal() -> CreateDbModal {
+    CreateDbModal::new(
+        "Create PostgreSQL Database",
+        [
+            OptSpec { label: "Owner:", hint: "existing role — empty = the connection's DB user", default: "" },
+            OptSpec { label: "Encoding:", hint: "e.g. UTF8 — empty = copy template1 (server default)", default: "" },
+        ],
+    )
 }
 
 /// Matches by label *or* host, so typing a connection's IP finds it just

@@ -120,6 +120,33 @@ pub fn change_password(conn: &mut Conn, user: &str, host: &str, new_password: &s
     conn.query_drop(&stmt).map_err(|e| e.to_string())
 }
 
+/// `CREATE DATABASE` with an optional character set / collation (empty =
+/// server default). Both are validated as bare identifiers since MySQL
+/// doesn't accept them quoted in every version.
+pub fn create_database(conn: &mut Conn, name: &str, charset: &str, collation: &str) -> Result<(), String> {
+    let stmt = create_database_sql(name, charset, collation)?;
+    conn.query_drop(&stmt).map_err(|e| e.to_string())
+}
+
+fn create_database_sql(name: &str, charset: &str, collation: &str) -> Result<String, String> {
+    let mut stmt = format!("CREATE DATABASE {}", quote_ident(name));
+    if !charset.is_empty() {
+        stmt.push_str(&format!(" CHARACTER SET {}", bare_word(charset, "character set")?));
+    }
+    if !collation.is_empty() {
+        stmt.push_str(&format!(" COLLATE {}", bare_word(collation, "collation")?));
+    }
+    Ok(stmt)
+}
+
+fn bare_word<'a>(s: &'a str, what: &str) -> Result<&'a str, String> {
+    if s.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
+        Ok(s)
+    } else {
+        Err(format!("invalid {what} {s:?}"))
+    }
+}
+
 /// Parses the "Grant DB" field into a `GRANT ... ON <target>` scope,
 /// following MySQL's own privilege-target syntax: empty or `*` means
 /// every database (`*.*`); `db` means every table in that database
@@ -162,4 +189,26 @@ fn quote_lit(s: &str) -> String {
 /// Escapes a MySQL identifier (database/table/column name).
 fn quote_ident(s: &str) -> String {
     format!("`{}`", s.replace('`', "``"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn create_database_sql_builds_optional_clauses() {
+        assert_eq!(create_database_sql("shop", "", "").unwrap(), "CREATE DATABASE `shop`");
+        assert_eq!(
+            create_database_sql("shop", "utf8mb4", "utf8mb4_unicode_ci").unwrap(),
+            "CREATE DATABASE `shop` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+        );
+        assert_eq!(create_database_sql("shop", "", "latin1_bin").unwrap(), "CREATE DATABASE `shop` COLLATE latin1_bin");
+    }
+
+    #[test]
+    fn create_database_sql_escapes_name_and_rejects_bad_charset() {
+        assert_eq!(create_database_sql("we`ird", "", "").unwrap(), "CREATE DATABASE `we``ird`");
+        assert!(create_database_sql("shop", "utf8; DROP DATABASE x", "").is_err());
+        assert!(create_database_sql("shop", "", "a b").is_err());
+    }
 }

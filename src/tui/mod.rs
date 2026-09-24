@@ -3,6 +3,7 @@ pub mod widgets;
 mod clickhouse_screen;
 mod cloudflare_screen;
 mod config_check_screen;
+mod create_db_modal;
 mod easyssh_screen;
 mod file_picker;
 mod godaddy_screen;

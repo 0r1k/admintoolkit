@@ -119,6 +119,25 @@ pub fn grant_table_privileges(cfg: &ConnectionWithSecrets, db: &str, role: &str,
     Ok(())
 }
 
+/// `CREATE DATABASE` with an optional owner role and encoding (empty =
+/// connecting user / server default). A non-default encoding needs
+/// `TEMPLATE template0`, since `template1` is pinned to its own encoding.
+pub fn create_database(client: &mut Client, name: &str, owner: &str, encoding: &str) -> Result<(), String> {
+    client.execute(&create_database_sql(name, owner, encoding), &[]).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+fn create_database_sql(name: &str, owner: &str, encoding: &str) -> String {
+    let mut stmt = format!("CREATE DATABASE {}", quote_ident(name));
+    if !owner.is_empty() {
+        stmt.push_str(&format!(" OWNER {}", quote_ident(owner)));
+    }
+    if !encoding.is_empty() {
+        stmt.push_str(&format!(" TEMPLATE template0 ENCODING {}", quote_lit(encoding)));
+    }
+    stmt
+}
+
 pub fn drop_user(client: &mut Client, name: &str) -> Result<(), String> {
     let stmt = format!("DROP USER {}", quote_ident(name));
     client.execute(&stmt, &[]).map_err(|e| e.to_string())?;
@@ -141,4 +160,27 @@ fn quote_ident(s: &str) -> String {
 /// accept parameter placeholders in that position.
 fn quote_lit(s: &str) -> String {
     format!("'{}'", s.replace('\'', "''"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn create_database_sql_builds_optional_clauses() {
+        assert_eq!(create_database_sql("shop", "", ""), r#"CREATE DATABASE "shop""#);
+        assert_eq!(create_database_sql("shop", "app", ""), r#"CREATE DATABASE "shop" OWNER "app""#);
+        assert_eq!(
+            create_database_sql("shop", "app", "UTF8"),
+            r#"CREATE DATABASE "shop" OWNER "app" TEMPLATE template0 ENCODING 'UTF8'"#
+        );
+    }
+
+    #[test]
+    fn create_database_sql_escapes_identifiers_and_literals() {
+        assert_eq!(
+            create_database_sql(r#"a"b"#, r#"o"w"#, "x'y"),
+            r#"CREATE DATABASE "a""b" OWNER "o""w" TEMPLATE template0 ENCODING 'x''y'"#
+        );
+    }
 }

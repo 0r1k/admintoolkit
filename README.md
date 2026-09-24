@@ -13,9 +13,9 @@ sysadmin tools:
 | **SSH User Manager** | Create/remove Linux users + `authorized_keys` on remote hosts, manage reusable SSH key "profiles" |
 | **Cloudflare DNS Manager** | Manage DNS records across multiple Cloudflare accounts via a scoped API Token — real per-record IDs (Update is a genuine `PUT`, not delete-then-recreate), a Proxied toggle for A/AAAA/CNAME |
 | **GoDaddy DNS Manager** | Manage DNS records across multiple GoDaddy API accounts |
-| **MySQL User Manager** | Create/list/delete MySQL/MariaDB users, rotate passwords, grant privileges — direct or via an SSH jump host |
-| **PostgreSQL User Manager** | Create/list/delete PostgreSQL roles, rotate passwords, grant database privileges — direct or via an SSH jump host |
-| **ClickHouse User Manager** | Create/list/edit/delete ClickHouse users (password, profile, allowed IPs) — direct SQL over HTTP (optionally via an SSH tunnel) or the legacy SSH + `users.d/*.xml` route |
+| **MySQL User Manager** | Create/list/delete MySQL/MariaDB users, rotate passwords, grant privileges, create databases (charset/collation) — direct or via an SSH jump host |
+| **PostgreSQL User Manager** | Create/list/delete PostgreSQL roles, rotate passwords, grant database privileges, create databases (owner/encoding) — direct or via an SSH jump host |
+| **ClickHouse User Manager** | Create/list/edit/delete ClickHouse users (password, profile, allowed IPs), create databases (engine, `ON CLUSTER`) — direct SQL over HTTP (optionally via an SSH tunnel) or the legacy SSH + `users.d/*.xml` route |
 | **Logs & Journals Reader** | SSH in and read the systemd journal (`journalctl`) or a plain file under `/var/log` (browsable), with severity filtering (warning/error/crit/...), text search, and optional auto-refresh |
 | **Kernel Tuner** | Best-practice sysctl/sysfs/ulimit tuning (134 curated tunables, each with a plain-English why) for desktop, database, traffic, gaming, AI/compute, container/Kubernetes, low-latency, laptop, storage, or security-hardening workloads — local or remote over SSH, runtime-only unless you opt into persisting |
 | **SSL Certificate Manager** | Detects what's actually serving TLS on `:443` (web server + version, every vhost's domains) straight from the live nginx/apache config, shows each cert's expiry, and swaps in a new cert — and, separately, a new CA/chain file — with a config test before reload and automatic rollback if it fails |

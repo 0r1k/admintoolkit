@@ -282,6 +282,16 @@ pub fn update_user(
     Ok(())
 }
 
+/// Runs `CREATE DATABASE` through the server's own `clickhouse-client`
+/// (as its default local user) — the SSH-XML route has no SQL
+/// credentials of its own.
+pub fn create_database(sess: &SshSession, name: &str, engine: &str, cluster: &str) -> Result<(), String> {
+    let sql = super::sql_client::create_database_sql(name, engine, cluster)?;
+    let cmd = format!("clickhouse-client --query '{}'", escape_single_quotes(&sql));
+    sess.exec_checked(&cmd).map_err(|e| format!("failed to create database: {e}"))?;
+    Ok(())
+}
+
 pub fn delete_user(sess: &SshSession, username: &str) -> Result<(), String> {
     let path = format!("/etc/clickhouse-server/users.d/{username}.xml");
     if !file_exists(sess, &path)? {
